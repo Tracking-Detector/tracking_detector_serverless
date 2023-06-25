@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  db:
+    image: mongo:latest
+    container_name: db
+    volumes:
+      - mongo_storage:/data/db
+    networks:
+      - app-network
+
+  requests:
+    build:
+      context: .
+      dockerfile: ./functions/requests/Dockerfile
+    environment:
+      - MONGOURI=mongodb://db:27017/tracking-detector
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  api-gateway:
+    image: nginx
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 80:80
+    depends_on:
+      - requests
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+
+volumes:
+  data: {}
+  mongo_storage: {}
