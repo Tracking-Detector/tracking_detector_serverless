@@ -5,10 +5,17 @@ import (
 )
 
 func EnvMongoURI() string {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	return os.Getenv("MONGO_URI")
+}
 
-	return os.Getenv("MONGOURI")
+func EnvMinIoURI() string {
+	return os.Getenv("MINIO_URI")
+}
+
+func EnvMinIoAccessKey() string {
+	return os.Getenv("MINIO_ACCESS_KEY")
+}
+
+func EnvMinIoPrivateKey() string {
+	return os.Getenv("MINIO_PRIVATE_KEY")
 }

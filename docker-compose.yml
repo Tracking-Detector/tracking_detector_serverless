@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: ./functions/requests/Dockerfile
     environment:
-      - MONGOURI=mongodb://db:27017/tracking-detector
+      - MONGO_URI=mongodb://db:27017/tracking-detector
     depends_on:
       - db
     networks:
