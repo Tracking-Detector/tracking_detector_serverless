@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"tds/shared/configs"
+	"tds/shared/extractor"
 	"tds/shared/models"
+	"tds/shared/responses"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,6 +14,7 @@ import (
 )
 
 var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, "requests")
+var featExtractor *extractor.Extractor = extractor.NewExtractor()
 
 func ExportData(c *fiber.Ctx) error {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -22,9 +26,21 @@ func ExportData(c *fiber.Ctx) error {
 		cursor.Decode(&requestData)
 
 	}
+	return c.Status(http.StatusCreated).JSON(responses.RequestDataResponse{
+		Status:  http.StatusCreated,
+		Message: "success",
+		Data:    &fiber.Map{"data": "adsasd"}})
 }
 
 func main() {
+	// init extractor
+	featExtractor.URL(extractor.URL_EXTRACTOR)
+	featExtractor.FrameType(extractor.FRAME_TYPE_EXTRACTOR)
+	featExtractor.Method(extractor.METHOD_EXTRACTOR)
+	featExtractor.Type(extractor.TYPE_EXTRACTOR)
+	featExtractor.RequestHeaders(extractor.REQUEST_HEADER_REFERER_EXTRACTOR)
+	featExtractor.Label(extractor.LABEL_EXTRACTOR)
+
 	app := fiber.New()
 
 	app.Post("/export/204", ExportData)

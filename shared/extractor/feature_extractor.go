@@ -1,6 +1,8 @@
 package extractor
 
-import "tds/shared/models"
+import (
+	"tds/shared/models"
+)
 
 type ExtractorTypes int
 
@@ -30,7 +32,7 @@ type InitiatorExtractor func(string) []int
 type MethodExtractor func(string) []int
 type ParentFrameIdExtractor func(int) []int
 type RequestIdExtractor func(string) []int
-type TabIdExtractor func(string) []int
+type TabIdExtractor func(int) []int
 type TimeStampExtractor func(string) []int
 type TypeExtractor func(string) []int
 type URLExtractor func(string) []int
@@ -113,7 +115,7 @@ func (e *Extractor) TimeStamp(extractor TimeStampExtractor) {
 	e.sequence = append(e.sequence, TimeStamp)
 }
 
-func (e *Extractor) TypeExtractor(extractor TypeExtractor) {
+func (e *Extractor) Type(extractor TypeExtractor) {
 	e.typeExtractor = extractor
 	e.sequence = append(e.sequence, Type)
 }
@@ -139,5 +141,40 @@ func (e *Extractor) Label(extractor LabelExtractor) {
 }
 
 func (e *Extractor) Encode(requestData models.RequestData) []int {
-	return make([]int, 0)
+	encoding := make([]int, 0)
+	for _, next := range e.sequence {
+		switch next {
+		case DocumentId:
+			encoding = append(encoding, e.documentIdExtractor(requestData.DocumentId)...)
+		case DocumentLifecycle:
+			encoding = append(encoding, e.documentLifecycleExtractor(requestData.DocumentLifecycle)...)
+		case FrameId:
+			encoding = append(encoding, e.frameIdExtractor(requestData.FrameId)...)
+		case FrameType:
+			encoding = append(encoding, e.frameTypeExtractor(requestData.FrameType)...)
+		case Initiator:
+			encoding = append(encoding, e.initiatorExtractor(requestData.Initiator)...)
+		case Method:
+			encoding = append(encoding, e.methodExtractor(requestData.Method)...)
+		case ParentFrameId:
+			encoding = append(encoding, e.parentFrameIdExtractor(requestData.ParentFrameId)...)
+		case RequestId:
+			encoding = append(encoding, e.parentFrameIdExtractor(requestData.ParentFrameId)...)
+		case TabId:
+			encoding = append(encoding, e.tabIdExtractor(requestData.TabId)...)
+		case TimeStamp:
+			encoding = append(encoding, e.timeStampExtractor(requestData.TimeStamp)...)
+		case Type:
+			encoding = append(encoding, e.typeExtractor(requestData.Type)...)
+		case URL:
+			encoding = append(encoding, e.urlExtractor(requestData.URL)...)
+		case Success:
+			encoding = append(encoding, e.successExtractor(requestData.URL)...)
+		case RequestHeaders:
+			encoding = append(encoding, e.requestHeadersExtractor(requestData.RequestHeaders)...)
+		case Label:
+			encoding = append(encoding, e.labelExtractor(requestData.Label)...)
+		}
+	}
+	return encoding
 }

@@ -19,3 +19,11 @@ func EnvMinIoAccessKey() string {
 func EnvMinIoPrivateKey() string {
 	return os.Getenv("MINIO_PRIVATE_KEY")
 }
+
+func EnvLogStashHost() string {
+	return os.Getenv("LOGSTASH_HOST")
+}
+
+func EnvLogStashPort() string {
+	return os.Getenv("LOGSTASH_PORT")
+}

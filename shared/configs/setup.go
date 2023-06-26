@@ -45,9 +45,23 @@ func ConnectMinio() *minio.Client {
 	return minioClient
 }
 
+// func ConnectLogger(appName string) *logrus.Logger {
+// 	logger := logrus.New()
+
+// 	hook, err := logrustash.NewHook("tcp", EnvLogStashHost()+":"+EnvLogStashPort(), appName)
+// 	logrustash.
+// 	if err != nil {
+// 		logrus.Fatal(err)
+// 	}
+
+// 	logger.Hooks.Add(hook)
+
+// 	return logger
+// }
+
 var DB *mongo.Client = ConnectDB()
 
-var MINIO *minio.Client = ConnectMinio()
+// var MINIO *minio.Client = ConnectMinio()
 
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
 	collection := client.Database("requests").Collection(collectionName)
