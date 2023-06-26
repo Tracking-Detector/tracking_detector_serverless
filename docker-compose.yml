@@ -11,34 +11,27 @@ services:
       - 8881:8881
     depends_on:
       - requests
+      - loki
     networks:
       - app-network
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
-    environment:
-      - node.name=node-1
-      - discovery.type=single-node
+  loki:
+    # runs on 3100
+    image: grafana/loki:latest
     volumes:
-      - ./infra/elasticsearch:/usr/share/elasticsearch/config
-      - ./infra/elasticsearch/jvm.options:/usr/share/elasticsearch/config/jvm.options
-      - ./infra/elasticsearch/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties
-      - elastic_data:/usr/share/elasticsearch/data
+      # - ./infra/loki/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    # command: -config.file=/etc/loki/local-config.yaml
     networks:
       - app-network
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.15.2
-    depends_on:
-      - elasticsearch
+  grafana:
+    # runs on 3000
+    image: grafana/grafana:latest
+    # environment: # - GF_INSTALL_PLUGINS=grafana-loki-datasource
     volumes:
-      - ./infra/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-    networks:
-      - app-network
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.15.2
+      - ./infra/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - grafana_data:/var/lib/grafana
     depends_on:
-      - logstash
+      - loki
     networks:
       - app-network
 
@@ -61,9 +54,7 @@ services:
       - LOGSTASH_PORT=5044
     depends_on:
       - db
-      - elasticsearch
-      - logstash
-      - kibana
+      - loki
 
     networks:
       - app-network
@@ -73,6 +64,7 @@ networks:
 
 
 volumes:
-  elastic_data: {}
+  loki_data: {}
+  grafana_data: {}
   data: {}
   mongo_storage: {}

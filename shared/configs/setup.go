@@ -8,6 +8,9 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	zaploki "github.com/paul-milne/zap-loki"
+	"go.uber.org/zap"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -45,19 +48,22 @@ func ConnectMinio() *minio.Client {
 	return minioClient
 }
 
-// func ConnectLogger(appName string) *logrus.Logger {
-// 	logger := logrus.New()
+func GetLogger(appName string) *zap.Logger {
+	zapConfig := zap.NewProductionConfig()
+	loki := zaploki.New(context.Background(), zaploki.Config{
+		Url:          "http://loki:3100",
+		BatchMaxSize: 1,
+		BatchMaxWait: 10 * time.Second,
+		Labels:       map[string]string{"app": appName},
+	})
 
-// 	hook, err := logrustash.NewHook("tcp", EnvLogStashHost()+":"+EnvLogStashPort(), appName)
-// 	logrustash.
-// 	if err != nil {
-// 		logrus.Fatal(err)
-// 	}
+	log, err := loki.WithCreateLogger(zapConfig)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return log
 
-// 	logger.Hooks.Add(hook)
-
-// 	return logger
-// }
+}
 
 var DB *mongo.Client = ConnectDB()
 

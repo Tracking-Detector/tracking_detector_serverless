@@ -19,6 +19,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var logger = configs.GetLogger("request-api")
 var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, "requests")
 var validate = validator.New()
 
@@ -141,11 +142,12 @@ func CreateRequestData(c *fiber.Ctx) error {
 }
 
 func main() {
+	logger.Info("Server initialized")
 	app := fiber.New()
 
 	app.Get("/requests/:requestId", GetRequestDataById)
 	app.Post("/requests", CreateRequestData)
 	app.Get("/requests", SearchRequests)
-
+	logger.Info("Server Running")
 	app.Listen(":8081")
 }
