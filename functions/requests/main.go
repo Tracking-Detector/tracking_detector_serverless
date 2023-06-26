@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -19,11 +20,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var logger = configs.GetLogger("request-api")
+// var logger = configs.GetLogger("request-api")
 var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, "requests")
 var validate = validator.New()
 
 func SearchRequests(c *fiber.Ctx) error {
+	log.Println("Search")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	var requestDataValues []models.RequestData
@@ -142,12 +144,12 @@ func CreateRequestData(c *fiber.Ctx) error {
 }
 
 func main() {
-	logger.Info("Server initialized")
+	log.Println("Hallo")
 	app := fiber.New()
 
 	app.Get("/requests/:requestId", GetRequestDataById)
 	app.Post("/requests", CreateRequestData)
 	app.Get("/requests", SearchRequests)
-	logger.Info("Server Running")
+	// logger.Info("Server Running")
 	app.Listen(":8081")
 }
