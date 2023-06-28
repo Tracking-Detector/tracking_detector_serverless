@@ -1,4 +1,6 @@
-version: '3'
+version: '3.7'
+
+name: tracking-detector
 
 services:
   # Infra
@@ -13,55 +15,38 @@ services:
     depends_on:
       - requests
       - loki
-    logging:
-      driver: loki
-      options:
-        loki-url: http://localhost:3100/loki/api/v1/push
-        loki-external-labels: job=dockerlogs,owner=ruan,environment=development
     networks:
       - app-network
   loki:
-    image: grafana/loki:2.1.0
+    image: grafana/loki:2.6.1
+
     volumes:
-      - ./infra/loki/loki.yaml:/etc/config/loki.yaml
-    entrypoint:
-      - /usr/bin/loki
-      - -config.file=/etc/config/loki.yaml
+      - loki_data:/loki
+      # - ./infra/loki/loki.yaml:/etc/config/loki.yaml
+      # entrypoint:
+      #   - /usr/bin/loki
+      #   - -config.file=/etc/config/loki.yaml
     networks:
       - app-network
-    depends_on:
-      - minio
+  promtail:
+    image: grafana/promtail:2.6.1
+    volumes:
+      - ./infra/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    networks:
+      - app-network
   grafana:
-    image: grafana/grafana:7.3.7
+    image: grafana/grafana:9.2.2
     restart: unless-stopped
     volumes:
-      - ./infra/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
-      - ./data/grafana:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./infra/grafana/datasources:/etc/grafana/provisioning/datasources
     networks:
       - app-network
     depends_on:
       - loki
-  minio:
-    # port 9000
-
-    image: minio/minio:RELEASE.2022-03-11T23-57-45Z
-    restart: unless-stopped
-    entrypoint: [ "" ]
-    command:
-      [
-        "sh",
-        "-c",
-        "mkdir -p /export/loki && minio server /export"
-      ]
-    environment:
-      - MINIO_ACCESS_KEY=697d0993dd097f38d5b8
-      - MINIO_SECRET_KEY=9f88738761b57c63f6a81bdfd471
-    volumes:
-      - ./data/minio:/export
-    ports:
-      - 9000:9000
-    networks:
-      - app-network
 
   db:
     image: mongo:latest
@@ -72,21 +57,11 @@ services:
       - app-network
     depends_on:
       - loki
-    logging:
-      driver: loki
-      options:
-        loki-url: http://localhost:3100/loki/api/v1/push
-        loki-external-labels: job=dockerlogs,owner=ruan,environment=development
     # Serverless Functions
   requests:
     build:
       context: .
       dockerfile: ./functions/requests/Dockerfile
-    logging:
-      driver: loki
-      options:
-        loki-url: http://localhost:3100/loki/api/v1/push
-        loki-external-labels: job=dockerlogs,environment=development
     environment:
       - MONGO_URI=mongodb://db:27017/tracking-detector
       - LOGSTASH_HOST=logstash
