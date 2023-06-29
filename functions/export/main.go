@@ -29,7 +29,7 @@ func RunDataExport(fe extractor.Extractor) {
 		defer pw.Close()
 		defer gzipWriter.Close()
 
-		cursor, err := requestDataCollection.Find(context.Background(), nil)
+		cursor, err := requestDataCollection.Find(context.Background(), bson.M{})
 		if err != nil {
 			log.Fatal("Failed to query MongoDB collection:", err)
 		}
@@ -71,24 +71,32 @@ func RunDataExport(fe extractor.Extractor) {
 }
 
 func ExportData(c *fiber.Ctx) error {
-	ctx, cancel := context.WithCancel(context.Background())
+	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	cursor, _ := requestDataCollection.Find(ctx, bson.M{})
-	defer cursor.Close(ctx)
-	for cursor.Next(ctx) {
-		var requestData models.RequestData
-		cursor.Decode(&requestData)
-
+	extractorName := c.Params("extractorName")
+	var ext extractor.Extractor
+	for _, ex := range extractor.EXTRACTORS {
+		if ex.GetName() == extractorName {
+			ext = ex
+		}
 	}
-	return c.Status(http.StatusCreated).JSON(responses.RequestDataResponse{
-		Status:  http.StatusCreated,
-		Message: "success",
-		Data:    &fiber.Map{"data": "adsasd"}})
+	if ext.GetName() == "" {
+		return c.Status(http.StatusNotFound).JSON(responses.ExportJobStartResponse{
+			Status:  http.StatusNotFound,
+			Message: "Could not find the extractor you want to trigger.",
+		})
+	}
+	go RunDataExport(ext)
+	return c.Status(http.StatusOK).JSON(responses.ExportJobStartResponse{
+		Status:  http.StatusOK,
+		Message: "The export has been started.",
+	})
 }
 
 func GetAllPossibleExports(c *fiber.Ctx) error {
 	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	possibleExports := make([]*fiber.Map, 0)
 	for _, ext := range extractor.EXTRACTORS {
 		possibleExports = append(possibleExports, &fiber.Map{
@@ -106,7 +114,7 @@ func GetAllPossibleExports(c *fiber.Ctx) error {
 func main() {
 
 	app := fiber.New()
-
+	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
 	app.Post("/export/:extractorName/run", ExportData)
 	app.Get("/export", GetAllPossibleExports)
 
