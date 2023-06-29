@@ -113,6 +113,22 @@ services:
       - loki
     networks:
       - app-network
+  download:
+    build:
+      context: .
+      dockerfile: ./functions/download/Dockerfile
+    environment:
+      - MONGO_URI=mongodb://db:27017/tracking-detector
+      - MINIO_ACCESS_KEY=adminadmin
+      - MINIO_PRIVATE_KEY=adminadmin
+      - EXPORT_BUCKET_NAME=exports
+      - MINIO_URI=minio:9000
+    depends_on:
+      - minio
+      - db
+      - loki
+    networks:
+      - app-network
 
 networks:
   app-network:
