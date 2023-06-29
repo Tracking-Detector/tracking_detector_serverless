@@ -8,8 +8,6 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	zaploki "github.com/paul-milne/zap-loki"
-	"go.uber.org/zap"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -48,29 +46,12 @@ func ConnectMinio() *minio.Client {
 	return minioClient
 }
 
-func GetLogger(appName string) *zap.Logger {
-	zapConfig := zap.NewProductionConfig()
-	loki := zaploki.New(context.Background(), zaploki.Config{
-		Url:          "http://loki:3100",
-		BatchMaxSize: 1,
-		BatchMaxWait: 10 * time.Second,
-		Labels:       map[string]string{"app": appName},
-	})
-
-	log, err := loki.WithCreateLogger(zapConfig)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	return log
-
-}
-
 var DB *mongo.Client = ConnectDB()
 
 var MINIO *minio.Client = ConnectMinio()
 
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database("requests").Collection(collectionName)
+	collection := client.Database("tracking-detector").Collection(collectionName)
 	return collection
 }
 

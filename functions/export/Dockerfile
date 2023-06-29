@@ -11,7 +11,7 @@ COPY go.sum /app/go.sum
 
 RUN go mod download
 # Copy the function source code and shared library
-COPY ./functions/export204/main.go /app/main.go
+COPY ./functions/export/main.go /app/main.go
 COPY ./shared /app/shared
 
 # Build the function executable

@@ -63,8 +63,9 @@ type Extractor struct {
 
 func NewExtractor(name string, description string) *Extractor {
 	return &Extractor{
-		sequence: make([]ExtractorTypes, 0),
-		name:     name,
+		sequence:    make([]ExtractorTypes, 0),
+		name:        name,
+		description: description,
 	}
 }
 
@@ -77,7 +78,7 @@ func (e *Extractor) GetDescription() string {
 }
 
 func (e *Extractor) GetFileName() string {
-	return e.name + "csv.gz"
+	return e.name + ".csv.gz"
 }
 
 func (e *Extractor) DocumentId(extractor DocumentIdExtractor) {

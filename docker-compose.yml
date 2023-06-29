@@ -13,19 +13,17 @@ services:
       - 8881:8881
       - 8882:8882
     depends_on:
+      - export
+      - minio
+      - grafana
       - requests
       - loki
     networks:
       - app-network
   loki:
     image: grafana/loki:2.6.1
-
     volumes:
       - loki_data:/loki
-      # - ./infra/loki/loki.yaml:/etc/config/loki.yaml
-      # entrypoint:
-      #   - /usr/bin/loki
-      #   - -config.file=/etc/config/loki.yaml
     networks:
       - app-network
   promtail:
@@ -47,10 +45,35 @@ services:
       - app-network
     depends_on:
       - loki
-
+  minio:
+    image: minio/minio
+    container_name: minio
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: adminadmin
+      MINIO_ROOT_PASSWORD: adminadmin
+    command: server --console-address ":9001" /data
+    networks:
+      - app-network
+  mongo-express:
+    restart: unless-stopped
+    image: mongo-express:latest
+    # volumes:
+    #   - ./infra/mongo-express:/etc/mongo-express/config
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://db:27017/tracking-detector
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
+      - ME_CONFIG_SITE_BASEURL=/mongo
+    depends_on:
+      - db
+    networks:
+      - app-network
   db:
     image: mongo:latest
     container_name: db
+    environment:
+      - MONGO_INITDB_DATABASE=tracking-detector
     volumes:
       - mongo_storage:/data/db
     networks:
@@ -64,7 +87,12 @@ services:
       dockerfile: ./functions/requests/Dockerfile
     environment:
       - MONGO_URI=mongodb://db:27017/tracking-detector
+      - MINIO_ACCESS_KEY=adminadmin
+      - MINIO_PRIVATE_KEY=adminadmin
+      - EXPORT_BUCKET_NAME=exports
+      - MINIO_URI=minio:9000
     depends_on:
+      - minio
       - db
       - loki
     networks:
@@ -75,7 +103,12 @@ services:
       dockerfile: ./functions/export/Dockerfile
     environment:
       - MONGO_URI=mongodb://db:27017/tracking-detector
+      - MINIO_ACCESS_KEY=adminadmin
+      - MINIO_PRIVATE_KEY=adminadmin
+      - EXPORT_BUCKET_NAME=exports
+      - MINIO_URI=minio:9000
     depends_on:
+      - minio
       - db
       - loki
     networks:
