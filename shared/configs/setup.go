@@ -67,7 +67,7 @@ func GetLogger(appName string) *zap.Logger {
 
 var DB *mongo.Client = ConnectDB()
 
-// var MINIO *minio.Client = ConnectMinio()
+var MINIO *minio.Client = ConnectMinio()
 
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
 	collection := client.Database("requests").Collection(collectionName)

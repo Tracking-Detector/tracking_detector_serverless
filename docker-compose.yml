@@ -64,13 +64,20 @@ services:
       dockerfile: ./functions/requests/Dockerfile
     environment:
       - MONGO_URI=mongodb://db:27017/tracking-detector
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
-
     depends_on:
       - db
       - loki
-
+    networks:
+      - app-network
+  export:
+    build:
+      context: .
+      dockerfile: ./functions/export/Dockerfile
+    environment:
+      - MONGO_URI=mongodb://db:27017/tracking-detector
+    depends_on:
+      - db
+      - loki
     networks:
       - app-network
 

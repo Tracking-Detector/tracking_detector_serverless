@@ -41,6 +41,8 @@ type RequestHeadersExtractor func([]map[string]string) []int
 type LabelExtractor func(bool) []int
 
 type Extractor struct {
+	name                       string
+	description                string
 	sequence                   []ExtractorTypes
 	documentIdExtractor        DocumentIdExtractor
 	documentLifecycleExtractor DocumentLifecycleExtractor
@@ -59,10 +61,23 @@ type Extractor struct {
 	labelExtractor             LabelExtractor
 }
 
-func NewExtractor() *Extractor {
+func NewExtractor(name string, description string) *Extractor {
 	return &Extractor{
 		sequence: make([]ExtractorTypes, 0),
+		name:     name,
 	}
+}
+
+func (e *Extractor) GetName() string {
+	return e.name
+}
+
+func (e *Extractor) GetDescription() string {
+	return e.description
+}
+
+func (e *Extractor) GetFileName() string {
+	return e.name + "csv.gz"
 }
 
 func (e *Extractor) DocumentId(extractor DocumentIdExtractor) {
