@@ -6,13 +6,13 @@ WORKDIR /app
 # COPY go.mod /app/go.mod
 
 # Download and cache Go modules
-COPY go.mod /app/go.mod
-COPY go.sum /app/go.sum
+COPY ./go/go.mod /app/go.mod
+COPY ./go/go.sum /app/go.sum
 
 RUN go mod download
 # Copy the function source code and shared library
-COPY ./functions/download/main.go /app/main.go
-COPY ./shared /app/shared
+COPY ./go/functions/requests/main.go /app/main.go
+COPY ./go/shared /app/shared
 
 # Build the function executable
 RUN go build -o main .

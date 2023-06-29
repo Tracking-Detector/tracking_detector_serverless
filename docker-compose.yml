@@ -84,7 +84,7 @@ services:
   requests:
     build:
       context: .
-      dockerfile: ./functions/requests/Dockerfile
+      dockerfile: ./go/functions/requests/Dockerfile
     environment:
       - MONGO_URI=mongodb://db:27017/tracking-detector
       - MINIO_ACCESS_KEY=adminadmin
@@ -100,7 +100,7 @@ services:
   export:
     build:
       context: .
-      dockerfile: ./functions/export/Dockerfile
+      dockerfile: ./go/functions/export/Dockerfile
     environment:
       - MONGO_URI=mongodb://db:27017/tracking-detector
       - MINIO_ACCESS_KEY=adminadmin
@@ -116,7 +116,7 @@ services:
   download:
     build:
       context: .
-      dockerfile: ./functions/download/Dockerfile
+      dockerfile: ./go/functions/download/Dockerfile
     environment:
       - MONGO_URI=mongodb://db:27017/tracking-detector
       - MINIO_ACCESS_KEY=adminadmin
