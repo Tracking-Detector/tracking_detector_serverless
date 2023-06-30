@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+minio
+pymongo
+tensorflow
+pandas
+numpy
+scikit-learn
+tensorflowjs
+datetime
