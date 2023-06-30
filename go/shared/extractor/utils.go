@@ -1,10 +1,5 @@
 package extractor
 
-import (
-	"unicode/utf16"
-	"unicode/utf8"
-)
-
 func GetTypes() []string {
 	return []string{
 		"xmlhttprequest",
@@ -40,9 +35,8 @@ func URL_EXTRACTOR(s string) []int {
 	encoded := make([]int, 200)
 	count := 199
 	for i := len(s) - 1; i >= 0; i-- {
-		c, _ := utf8.DecodeRuneInString(s[i:i])
-		utf16Enc := utf16.Encode([]rune{c})
-		encoded[count] = (int(utf16Enc[0]) % 98) + 1
+		c := []rune(s)[i]
+		encoded[count] = (int(c) % 89) + 1
 		if count == 0 {
 			break
 		}
