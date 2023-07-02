@@ -10,7 +10,7 @@ func InitExtractors() []Extractor {
 	extractor204.Method(METHOD_EXTRACTOR)
 	extractor204.Type(TYPE_EXTRACTOR)
 	extractor204.RequestHeaders(REQUEST_HEADER_REFERER_EXTRACTOR)
-	extractor204.Label(LABEL_EXTRACTOR)
+	extractor204.Labels(LABEL_EXTRACTOR_OR)
 	// Here you init new extractors
 
 	return []Extractor{*extractor204}

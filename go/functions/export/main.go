@@ -15,7 +15,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/minio/minio-go/v7"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -29,7 +28,7 @@ func RunDataExport(fe extractor.Extractor) {
 		defer pw.Close()
 		defer gzipWriter.Close()
 
-		cursor, err := requestDataCollection.Find(context.Background(), bson.M{})
+		cursor, err := requestDataCollection.Find(context.Background(), fe.Query())
 		if err != nil {
 			log.Fatal("Failed to query MongoDB collection:", err)
 		}

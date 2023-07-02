@@ -1,5 +1,9 @@
 package extractor
 
+import (
+	"tds/shared/models"
+)
+
 func GetTypes() []string {
 	return []string{
 		"xmlhttprequest",
@@ -72,8 +76,12 @@ func TYPE_EXTRACTOR(s string) []int {
 	return []int{0}
 }
 
-func LABEL_EXTRACTOR(b bool) []int {
-	if b {
+func LABEL_EXTRACTOR_OR(labels []models.RequestDataLabel) []int {
+	isTracking := false
+	for _, label := range labels {
+		isTracking = isTracking || label.IsLabeled
+	}
+	if isTracking {
 		return []int{1}
 	}
 	return []int{0}

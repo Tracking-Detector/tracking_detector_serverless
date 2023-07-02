@@ -125,8 +125,9 @@ func CreateRequestData(c *fiber.Ctx) error {
 		Type:              requestData.Type,
 		URL:               requestData.URL,
 		RequestHeaders:    requestData.RequestHeaders,
+		Response:          requestData.Response,
 		Success:           requestData.Success,
-		Label:             requestData.Label,
+		Labels:            requestData.Labels,
 	}
 
 	result, err := requestDataCollection.InsertOne(ctx, newUser)
