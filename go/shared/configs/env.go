@@ -23,3 +23,7 @@ func EnvMinIoPrivateKey() string {
 func EnvExportBucketName() string {
 	return os.Getenv("EXPORT_BUCKET_NAME")
 }
+
+func EnvModelBucketName() string {
+	return os.Getenv("MODEL_BUCKET_NAME")
+}

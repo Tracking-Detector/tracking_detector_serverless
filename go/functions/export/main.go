@@ -45,7 +45,6 @@ func RunDataExport(fe extractor.Extractor) {
 			}
 			encoded, encodeErr := fe.Encode(doc)
 			if encodeErr != nil {
-				log.Println(encodeErr)
 				continue
 			}
 			arr, err := json.Marshal(encoded)
@@ -125,7 +124,7 @@ func RunAllExtractors() {
 
 func SetupCron() {
 	c := cron.New()
-	_, err := c.AddFunc("0 0 * * 0 */2", RunAllExtractors)
+	_, err := c.AddFunc("0 0 */14 * *", RunAllExtractors)
 	if err != nil {
 		log.Fatalln("Failed to add cron job", err)
 	}

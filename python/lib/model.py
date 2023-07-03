@@ -114,20 +114,20 @@ class Model:
                     file_path = os.path.join(root, file)
                     client.fput_object(
                         model_bucket,
-                        self.model_name + "/" + file,
+                        self.model_name +"/" + dataset + "/" + file,
                         file_path,
                     )
-            tar = tarfile.open(f"{self.model_name}.tar.gz", "w:gz")
+            tar = tarfile.open(f"{self.model_name}_{dataset}.tar.gz", "w:gz")
             tar.add(tempName, arcname=self.model_name)
             tar.close()
             client.fput_object(
                 model_bucket,
-                self.model_name + "/" + f"{self.model_name}.tar.gz",
-                f"./{self.model_name}.tar.gz",
+                self.model_name + "/" + f"{self.model_name}_{dataset}.tar.gz",
+                f"./{self.model_name}_{dataset}.tar.gz",
             )
             logger.info("Uploaded files to minio")
             shutil.rmtree(f"./{tempName}", ignore_errors=False, onerror=None)
-            os.remove(f"./{self.model_name}.tar.gz")
+            os.remove(f"./{self.model_name}_{dataset}.tar.gz")
             logger.info("Cleaned up folders")
         except Exception as e:
             print(e)

@@ -122,6 +122,7 @@ services:
       - MONGO_URI=mongodb://db:27017/tracking-detector
       - MINIO_ACCESS_KEY=adminadmin
       - MINIO_PRIVATE_KEY=adminadmin
+      - MODEL_BUCKET_NAME=models
       - EXPORT_BUCKET_NAME=exports
       - MINIO_URI=minio:9000
     depends_on:
