@@ -15,6 +15,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/minio/minio-go/v7"
+	"github.com/robfig/cron/v3"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -24,11 +26,12 @@ func RunDataExport(fe extractor.Extractor) {
 	pr, pw := io.Pipe()
 
 	gzipWriter := gzip.NewWriter(pw)
+	// TODO write export data into mongo
 	go func() {
 		defer pw.Close()
 		defer gzipWriter.Close()
 
-		cursor, err := requestDataCollection.Find(context.Background(), fe.Query())
+		cursor, err := requestDataCollection.Find(context.Background(), bson.M{})
 		if err != nil {
 			log.Fatal("Failed to query MongoDB collection:", err)
 		}
@@ -40,8 +43,12 @@ func RunDataExport(fe extractor.Extractor) {
 				log.Println("Failed to decode MongoDB document:", err)
 				continue
 			}
-
-			arr, err := json.Marshal(fe.Encode(doc))
+			encoded, encodeErr := fe.Encode(doc)
+			if encodeErr != nil {
+				log.Println(encodeErr)
+				continue
+			}
+			arr, err := json.Marshal(encoded)
 			if err != nil {
 				log.Fatal("Could not convert int[] to string")
 				continue
@@ -110,8 +117,23 @@ func GetAllPossibleExports(c *fiber.Ctx) error {
 	})
 }
 
-func main() {
+func RunAllExtractors() {
+	for _, ex := range extractor.EXTRACTORS {
+		RunDataExport(ex)
+	}
+}
 
+func SetupCron() {
+	c := cron.New()
+	_, err := c.AddFunc("0 0 * * 0 */2", RunAllExtractors)
+	if err != nil {
+		log.Fatalln("Failed to add cron job", err)
+	}
+	c.Start()
+}
+
+func main() {
+	SetupCron()
 	app := fiber.New()
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
 	app.Post("/export/:extractorName/run", ExportData)

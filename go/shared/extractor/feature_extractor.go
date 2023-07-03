@@ -26,21 +26,21 @@ const (
 	Label
 )
 
-type DocumentIdExtractor func(string) []int
-type DocumentLifecycleExtractor func(string) []int
-type FrameIdExtractor func(int) []int
-type FrameTypeExtractor func(string) []int
-type InitiatorExtractor func(string) []int
-type MethodExtractor func(string) []int
-type ParentFrameIdExtractor func(int) []int
-type RequestIdExtractor func(string) []int
-type TabIdExtractor func(int) []int
-type TimeStampExtractor func(float32) []int
-type TypeExtractor func(string) []int
-type URLExtractor func(string) []int
-type SuccessExtractor func(string) []int
-type RequestHeadersExtractor func([]map[string]string) []int
-type LabelExtractor func([]models.RequestDataLabel) []int
+type DocumentIdExtractor func(string) ([]int, error)
+type DocumentLifecycleExtractor func(string) ([]int, error)
+type FrameIdExtractor func(int) ([]int, error)
+type FrameTypeExtractor func(string) ([]int, error)
+type InitiatorExtractor func(string) ([]int, error)
+type MethodExtractor func(string) ([]int, error)
+type ParentFrameIdExtractor func(int) ([]int, error)
+type RequestIdExtractor func(string) ([]int, error)
+type TabIdExtractor func(int) ([]int, error)
+type TimeStampExtractor func(float32) ([]int, error)
+type TypeExtractor func(string) ([]int, error)
+type URLExtractor func(string) ([]int, error)
+type SuccessExtractor func(string) ([]int, error)
+type RequestHeadersExtractor func([]map[string]string) ([]int, error)
+type LabelExtractor func([]models.RequestDataLabel) ([]int, error)
 
 type Extractor struct {
 	name                       string
@@ -209,41 +209,48 @@ func (e *Extractor) Labels(extractor LabelExtractor) {
 	}
 }
 
-func (e *Extractor) Encode(requestData models.RequestData) []int {
+func (e *Extractor) Encode(requestData models.RequestData) ([]int, error) {
 	encoding := make([]int, 0)
+	var err error
+	var val []int
 	for _, next := range e.sequence {
 		switch next {
 		case DocumentId:
-			encoding = append(encoding, e.documentIdExtractor(requestData.DocumentId)...)
+			val, err = e.documentIdExtractor(requestData.DocumentId)
 		case DocumentLifecycle:
-			encoding = append(encoding, e.documentLifecycleExtractor(requestData.DocumentLifecycle)...)
+			val, err = e.documentLifecycleExtractor(requestData.DocumentLifecycle)
 		case FrameId:
-			encoding = append(encoding, e.frameIdExtractor(requestData.FrameId)...)
+			val, err = e.frameIdExtractor(requestData.FrameId)
 		case FrameType:
-			encoding = append(encoding, e.frameTypeExtractor(requestData.FrameType)...)
+			val, err = e.frameTypeExtractor(requestData.FrameType)
 		case Initiator:
-			encoding = append(encoding, e.initiatorExtractor(requestData.Initiator)...)
+			val, err = e.initiatorExtractor(requestData.Initiator)
 		case Method:
-			encoding = append(encoding, e.methodExtractor(requestData.Method)...)
+			val, err = e.methodExtractor(requestData.Method)
 		case ParentFrameId:
-			encoding = append(encoding, e.parentFrameIdExtractor(requestData.ParentFrameId)...)
+			val, err = e.parentFrameIdExtractor(requestData.ParentFrameId)
 		case RequestId:
-			encoding = append(encoding, e.parentFrameIdExtractor(requestData.ParentFrameId)...)
+			val, err = e.parentFrameIdExtractor(requestData.ParentFrameId)
 		case TabId:
-			encoding = append(encoding, e.tabIdExtractor(requestData.TabId)...)
+			val, err = e.tabIdExtractor(requestData.TabId)
 		case TimeStamp:
-			encoding = append(encoding, e.timeStampExtractor(requestData.TimeStamp)...)
+			val, err = e.timeStampExtractor(requestData.TimeStamp)
 		case Type:
-			encoding = append(encoding, e.typeExtractor(requestData.Type)...)
+			val, err = e.typeExtractor(requestData.Type)
 		case URL:
-			encoding = append(encoding, e.urlExtractor(requestData.URL)...)
+			val, err = e.urlExtractor(requestData.URL)
 		case Success:
-			encoding = append(encoding, e.successExtractor(requestData.URL)...)
+			val, err = e.successExtractor(requestData.URL)
 		case RequestHeaders:
-			encoding = append(encoding, e.requestHeadersExtractor(requestData.RequestHeaders)...)
+			val, err = e.requestHeadersExtractor(requestData.RequestHeaders)
 		case Label:
-			encoding = append(encoding, e.labelExtractor(requestData.Labels)...)
+			val, err = e.labelExtractor(requestData.Labels)
+		}
+		if err != nil {
+			return nil, err
+		} else {
+			encoding = append(encoding, val...)
 		}
 	}
-	return encoding
+	return encoding, nil
 }

@@ -131,6 +131,7 @@ services:
     networks:
       - app-network
   training:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./python/Dockerfile

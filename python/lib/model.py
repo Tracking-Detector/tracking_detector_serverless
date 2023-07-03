@@ -2,6 +2,7 @@ import gzip
 import io
 import os
 import random
+import shutil
 import string
 import numpy as np
 import pandas as pd
@@ -17,7 +18,7 @@ import tensorflowjs as tfjs
 import tarfile
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("Model")
 logging.basicConfig(level=logging.INFO)
 
 
@@ -46,21 +47,24 @@ class Model:
                 secret_key=os.getenv("MINIO_PRIVATE_KEY"),
                 secure=False,
             )
+            logger.info("Connection successful")
             export_bucket = os.getenv("EXPORT_BUCKET_NAME")
             model_bucket = os.getenv("MODEL_BUCKET_NAME")
+            logger.info("Start verifing bucket")
             self.verify_bucket_exists(client, export_bucket)
             self.verify_bucket_exists(client, model_bucket)
+            logger.info("Verification successful")
             logger.info("Start loading training data into dataframe.")
 
             file_data = client.get_object(export_bucket, dataset + ".csv.gz")
             gzip_file = gzip.GzipFile(fileobj=file_data)
-            csv_content = gzip_file.read().decode("utf-8")
+            # csv_content = gzip_file.read().decode("utf-8")
 
-            df = pd.read_csv(io.StringIO(csv_content))
+            df = pd.read_csv(gzip_file)
             logger.info("Finished loading training data into dataframe.")
 
-            X = df.to_numpy()[:, 0 : (self.input_dims[0] + 1)]
-            y = df.to_numpy()[:, -1]
+            X = df.iloc[:, 0:(self.input_dims[0] + 1)].values
+            y = df.iloc[:, -1].values
 
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=0.33, random_state=42
@@ -95,6 +99,8 @@ class Model:
                     "f1Train": f1_train,
                     "f1Test": f1_test,
                     "trainingHistory": history.history,
+                    "batchSize": batch_size,
+                    "epochs": epochs
                 }
             )
             logger.info("Inserted Training Results")
@@ -120,10 +126,11 @@ class Model:
                 f"./{self.model_name}.tar.gz",
             )
             logger.info("Uploaded files to minio")
-            os.rmtree(tempName)
+            shutil.rmtree(f"./{tempName}", ignore_errors=False, onerror=None)
             os.remove(f"./{self.model_name}.tar.gz")
             logger.info("Cleaned up folders")
         except Exception as e:
+            print(e)
             logger.error(
                 f"An error occurred while trying to train the model '{self.model_name}'.",
                 e,

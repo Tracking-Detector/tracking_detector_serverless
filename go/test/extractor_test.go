@@ -14,7 +14,7 @@ func TestUrlExtractor(t *testing.T) {
 			"8deb51e4b6913687&vid=f99b7ed01a2711edab50617d53bfba7b&v" +
 			"ids=1&msclkid=N&evt=pageHide"
 		// when
-		got := extractor.URL_EXTRACTOR(url)
+		got, _ := extractor.URL_EXTRACTOR(url)
 
 		// then
 		want := []int{0, 0, 0, 0, 0, 0, 0, 16, 28, 28, 24, 27,
@@ -50,7 +50,7 @@ func TestUrlExtractor(t *testing.T) {
 			"Analysis%2C%20Health%20Research%20-%20Scientific%20American&en=" +
 			"page_view&_fv=1&_nsi=1&_ss=1&_ee=1"
 		// when
-		got := extractor.URL_EXTRACTOR(url)
+		got, _ := extractor.URL_EXTRACTOR(url)
 		// then
 		want := []int{16, 28, 28, 24, 27, 38, 52, 66, 38, 51, 71, 38, 51, 71, 31, 31,
 			31, 47, 27, 11, 17, 13, 22, 28, 17, 14, 17, 11, 9, 21, 13, 26, 17, 11, 9,
