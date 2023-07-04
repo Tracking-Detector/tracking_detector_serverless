@@ -14,6 +14,7 @@ import (
 	"tds/shared/responses"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/minio/minio-go/v7"
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -134,6 +135,7 @@ func SetupCron() {
 func main() {
 	SetupCron()
 	app := fiber.New()
+	app.Use(cors.New())
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
 	app.Post("/export/:extractorName/run", ExportData)
 	app.Get("/export", GetAllPossibleExports)

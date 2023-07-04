@@ -13,6 +13,7 @@ import (
 	"tds/shared/utils"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -116,6 +117,7 @@ func GetModelData(c *fiber.Ctx) error {
 
 func main() {
 	app := fiber.New()
+	app.Use(cors.New())
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
 	app.Get("/download/export/:fileName", DownloadExport)
 	app.Get("/download/export", GetDownloadExport)

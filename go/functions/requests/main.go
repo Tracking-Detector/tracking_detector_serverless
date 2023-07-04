@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -147,7 +148,7 @@ func CreateRequestData(c *fiber.Ctx) error {
 func main() {
 	log.Println("Hallo")
 	app := fiber.New()
-
+	app.Use(cors.New())
 	app.Get("/requests/:requestId", GetRequestDataById)
 	app.Post("/requests", CreateRequestData)
 	app.Get("/requests", SearchRequests)
