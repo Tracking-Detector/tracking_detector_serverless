@@ -15,14 +15,14 @@
                 <v-list-subheader>Available Exports</v-list-subheader>
                 <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
                 <div v-for="avex in exports">
-                    <v-list-item @click="startExport(avex.name)">
+                    <v-list-item>
                         <template v-slot:prepend>
                             <v-icon>mdi-export</v-icon>
                         </template>
                         <v-list-item-title>{{ avex.name }}</v-list-item-title>
                         <v-list-item-subtitle>{{ avex.description }}</v-list-item-subtitle>
                         <template v-slot:append>
-                            <v-btn icon="mdi-play" variant="text" @click=""></v-btn>
+                            <v-btn icon="mdi-play" variant="text" @click="startExport(avex.name)">></v-btn>
                         </template>
                     </v-list-item>
                     <v-divider></v-divider>
