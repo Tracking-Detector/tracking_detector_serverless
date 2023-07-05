@@ -22,7 +22,7 @@
                         <v-list-item-title>{{ avex.name }}</v-list-item-title>
                         <v-list-item-subtitle>{{ avex.description }}</v-list-item-subtitle>
                         <template v-slot:append>
-                            <v-btn icon="mdi-play" variant="text" @click="startExport(avex.name)">></v-btn>
+                            <v-btn icon="mdi-play" variant="text" @click="startExport(avex.name)"></v-btn>
                         </template>
                     </v-list-item>
                     <v-divider></v-divider>
