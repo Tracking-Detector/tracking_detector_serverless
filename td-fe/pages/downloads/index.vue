@@ -77,7 +77,7 @@
                                 </template>
                                 {{ entry.name }}
                                 <template v-slot:append>
-                                    <v-btn icon="mdi-download" variant="text" :href="'http://localhost/download/'+entry.path" download></v-btn>
+                                    <v-btn icon="mdi-download" variant="text" :href="'/api/download/'+entry.path" download></v-btn>
                                 </template>
                             </v-list-item>
                             <v-divider></v-divider>
@@ -141,13 +141,13 @@ const transformToFolderArchitecture = () => {
 
 }
 onMounted(() => {
-    fetch("http://localhost/download/models").then(response => {
+    fetch("/api/download/models").then(response => {
         return response.json()
     }).then(body => {
         downloadableData.value.models = body
         transformToFolderArchitecture()
     })
-    fetch("http://localhost/download/export").then(response => {
+    fetch("/api/download/export").then(response => {
         return response.json()
     }).then(body => {
         downloadableData.value.export = body

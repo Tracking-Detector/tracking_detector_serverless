@@ -4,13 +4,13 @@
 
         <v-navigation-drawer>
             <v-list>
-                <v-list-item title="Overview" to="/"></v-list-item>
+                <v-list-item title="Overview" to="/td-ui/"></v-list-item>
                 <v-divider></v-divider>
-                <v-list-item title="Downloads" to="/downloads"></v-list-item>
+                <v-list-item title="Downloads" to="/td-ui/downloads"></v-list-item>
                 <v-divider></v-divider>
-                <v-list-item title="Exports" to="/exports"></v-list-item>
+                <v-list-item title="Exports" to="/td-ui/exports"></v-list-item>
                 <v-divider></v-divider>
-                <v-list-item title="Models" to="/models"></v-list-item>
+                <v-list-item title="Models" to="/td-ui/models"></v-list-item>
                 <v-divider></v-divider>
             </v-list>
             <template v-slot:append>

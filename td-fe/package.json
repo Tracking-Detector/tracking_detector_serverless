@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@mdi/font": "^7.2.96",
+    "apexcharts": "^3.41.0",
+    "nuxt-highcharts": "^3.0.11",
     "sass": "^1.51.0",
+    "vue-apexcharts": "^1.6.2",
     "vuetify": "^3.0.0-beta.1"
   },
   "devDependencies": {

@@ -42,7 +42,7 @@ const alert = ref({
 
 const loadAvailableExports = () => {
     isLoading.value = true
-    fetch("http://localhost/export").then(response => {
+    fetch("/api/export").then(response => {
         return response.json()
     }).then(body => {
         exports.value = body.data
@@ -52,7 +52,7 @@ const loadAvailableExports = () => {
 
 const startExport = (name) => {
     isLoading.value = true
-    fetch("http://localhost/export/" + name + "/run", {
+    fetch("/api/export/" + name + "/run", {
         method: "POST"
     }).then(response => {
         return response.json()
