@@ -146,7 +146,6 @@ func CreateRequestData(c *fiber.Ctx) error {
 }
 
 func main() {
-	log.Println("Hallo")
 	app := fiber.New()
 	app.Use(cors.New())
 	app.Get("/requests/:requestId", GetRequestDataById)

@@ -5,6 +5,7 @@ name: tracking-detector
 services:
   # Infra
   api-gateway:
+    restart: unless-stopped
     image: nginx
     ports:
       - 80:80
@@ -22,12 +23,15 @@ services:
     networks:
       - app-network
   loki:
+    restart: unless-stopped
     image: grafana/loki:2.6.1
     volumes:
       - loki_data:/loki
+      - ./infra/loki/loki.yaml:/etc/loki/loki-config.yaml
     networks:
       - app-network
   promtail:
+    restart: unless-stopped
     image: grafana/promtail:2.6.1
     volumes:
       - ./infra/promtail/promtail-config.yml:/etc/promtail/config.yml
@@ -36,8 +40,8 @@ services:
     networks:
       - app-network
   grafana:
-    image: grafana/grafana:9.2.2
     restart: unless-stopped
+    image: grafana/grafana:9.2.2
     volumes:
       - grafana_data:/var/lib/grafana
       - ./infra/grafana/grafana.ini:/etc/grafana/grafana.ini
@@ -47,6 +51,7 @@ services:
     depends_on:
       - loki
   minio:
+    restart: unless-stopped
     image: minio/minio
     container_name: minio
     volumes:
@@ -60,8 +65,6 @@ services:
   mongo-express:
     restart: unless-stopped
     image: mongo-express:latest
-    # volumes:
-    #   - ./infra/mongo-express:/etc/mongo-express/config
     environment:
       - ME_CONFIG_MONGODB_URL=mongodb://db:27017/tracking-detector
       - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
@@ -72,6 +75,7 @@ services:
       - app-network
   db:
     image: mongo:latest
+    restart: unless-stopped
     container_name: db
     environment:
       - MONGO_INITDB_DATABASE=tracking-detector
@@ -83,6 +87,7 @@ services:
       - loki
     # Serverless Functions
   requests:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./go/functions/requests/Dockerfile
@@ -99,6 +104,7 @@ services:
     networks:
       - app-network
   export:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./go/functions/export/Dockerfile
@@ -115,6 +121,7 @@ services:
     networks:
       - app-network
   download:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./go/functions/download/Dockerfile
@@ -142,6 +149,24 @@ services:
       - MINIO_PRIVATE_KEY=adminadmin
       - EXPORT_BUCKET_NAME=exports
       - MODEL_BUCKET_NAME=models
+      - MINIO_URI=minio:9000
+    depends_on:
+      - minio
+      - db
+      - loki
+    networks:
+      - app-network
+  training-runs:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./go/functions/training-runs/Dockerfile
+    environment:
+      - MONGO_URI=mongodb://db:27017/tracking-detector
+      - MINIO_ACCESS_KEY=adminadmin
+      - MINIO_PRIVATE_KEY=adminadmin
+      - MODEL_BUCKET_NAME=models
+      - EXPORT_BUCKET_NAME=exports
       - MINIO_URI=minio:9000
     depends_on:
       - minio
