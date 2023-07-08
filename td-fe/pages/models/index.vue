@@ -2,7 +2,8 @@
     <div>
         <h3 class="mb-4">Welcome on Models</h3>
         <p style="width: 800px;" class="mb-4">
-            Here you can explore the different models and trigger the training process for different datasets. Additionally you can see great insights
+            Here you can explore the different models and trigger the training process for different datasets. Additionally
+            you can see great insights
             on the models performance and other metrics of each training run for each dataset.
         </p>
         <v-card>
@@ -10,19 +11,20 @@
             <div class="pa-4">
                 <v-select density="compact" style="width: 300px;" v-model="selectedModel" label="Select Model"
                     :items="models.map(x => x.name)"></v-select>
-                   
+
                 <div v-if="selectedModel != 'No model selected'">
                     <h4 class="mb-2">Run Training on DataSet</h4>
                     <div class="d-flex">
-                        <v-select density="compact" style="max-width: 300px;" v-model="selectedDataSet" label="Dataset to train the model on"
-                    :items="dataSets"></v-select>
-             
-                    <v-btn icon="mdi-play" variant="text" @click="triggerTraining()"></v-btn>
+                        <v-select density="compact" style="max-width: 300px;" v-model="selectedDataSet"
+                            label="Dataset to train the model on" :items="dataSets"></v-select>
+
+                        <v-btn icon="mdi-play" variant="text" @click="triggerTraining()"></v-btn>
                     </div>
-                    
-                    <training-data-view  v-for="dataset in getUniqueDataNames()" :data="runs" :dataSet="dataset"></training-data-view>
+
+                    <training-data-view v-for="dataset in getUniqueDataNames()" :data="runs"
+                        :dataSet="dataset"></training-data-view>
                 </div>
-               
+
             </div>
 
         </v-card>
@@ -40,13 +42,17 @@ const selectedModel = ref("No model selected")
 const selectedDataSet = ref("")
 
 const triggerTraining = () => {
-    fetch(`api/train/models/${selectedModel.value}/run/${selectedDataSet.value}`, {
-        method: "POST"
+    fetch(`/api/train/models/${selectedModel.value}/run/${selectedDataSet.value}`, {
+        headers: {
+            "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify({})
     })
 }
 
 const getUniqueDataNames = () => {
-    return new Set(runs.value.map(x=>x.dataSet))
+    return new Set(runs.value.map(x => x.dataSet))
 }
 
 const loadModelRuns = () => {

@@ -174,6 +174,11 @@ services:
       - loki
     networks:
       - app-network
+  front-end:
+    restart: unless-stopped
+    build: ./td-fe
+    networks:
+      - app-network
 
 networks:
   app-network:

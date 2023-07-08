@@ -12,9 +12,5 @@ export default defineNuxtConfig({
       'process.env.DEBUG': false,
     },
   },
-  runtimeConfig: {
-    public: {
-      apiBase: '/td-ui'
-    }
-  }
+  
 })

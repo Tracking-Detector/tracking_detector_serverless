@@ -12,4 +12,4 @@ ingester:
         store: inmemory
       replication_factor: 1
   chunk_idle_period: 5m
-  chunk_retain_period: 8h
+  chunk_retain_period: 1h

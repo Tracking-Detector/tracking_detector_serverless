@@ -71,7 +71,11 @@ const genRunMetrics = () => {
 
 const triggerTraining = (modelName, dataSet) => {
     fetch(`/api/train/models/${modelName}/run/${dataSet}`, {
-        method: "POST"
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({})
     })
 }
 
