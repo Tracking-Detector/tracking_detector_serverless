@@ -2,8 +2,8 @@
     <div class="pa-4">
         <h3 class="mb-4">Welcome on Downloads</h3>
         <p style="width: 600px;" class="mb-4">Here are all the available downloadable files in one place.
-             There a dataset exports available in the export directory and trained models in the models directory.</p>
-     
+            There a dataset exports available in the export directory and trained models in the models directory.</p>
+
         <v-card elevation="2">
             <v-toolbar class="pl-4">
                 files://{{ dir }}
@@ -52,7 +52,7 @@
                                         </template>
                                         {{ subItem.name }}
                                     </v-list-item>
-                                    
+
                                 </div>
                             </v-list-group>
                             <v-list-item v-else @click="changeDir(item)">
@@ -77,7 +77,8 @@
                                 </template>
                                 {{ entry.name }}
                                 <template v-slot:append>
-                                    <v-btn icon="mdi-download" variant="text" :href="'/api/transfer/'+entry.path" download></v-btn>
+                                    <v-btn icon="mdi-download" variant="text" :href="'/api/transfer/' + entry.path"
+                                        download></v-btn>
                                 </template>
                             </v-list-item>
                             <v-divider></v-divider>
@@ -92,6 +93,7 @@
 const downloadableData = ref({})
 const folderStructure = ref([])
 const currentDir = ref([])
+const config = useRuntimeConfig()
 const breadCrumps = ref(
     [{
         title: 'Files',
@@ -141,13 +143,21 @@ const transformToFolderArchitecture = () => {
 
 }
 onMounted(() => {
-    fetch("/api/transfer/models").then(response => {
+    fetch("/api/transfer/models", {
+        headers: {
+            "X-API-Key": 'Bearer ' + config.public.apiBase
+        }
+    }).then(response => {
         return response.json()
     }).then(body => {
         downloadableData.value.models = body
         transformToFolderArchitecture()
     })
-    fetch("/api/transfer/export").then(response => {
+    fetch("/api/transfer/export", {
+        headers: {
+            "X-API-Key": 'Bearer ' + config.public.apiBase
+        }
+    }).then(response => {
         return response.json()
     }).then(body => {
         downloadableData.value.export = body

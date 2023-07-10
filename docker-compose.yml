@@ -12,7 +12,7 @@ services:
       - 443:443
       - 8081:8081
     volumes:
-      - ./infra/api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/api-gateway/:/etc/nginx:ro
     depends_on:
       - mongo-express
       - export
@@ -85,18 +85,23 @@ services:
       - app-network
     depends_on:
       - loki
-    # Serverless Functions
+  # Serverless Functions
   requests:
     restart: unless-stopped
     build:
       context: .
       dockerfile: ./go/functions/requests/Dockerfile
     environment:
-      - MONGO_URI=mongodb://db:27017/tracking-detector
-      - MINIO_ACCESS_KEY=adminadmin
-      - MINIO_PRIVATE_KEY=adminadmin
-      - EXPORT_BUCKET_NAME=exports
-      - MINIO_URI=minio:9000
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
     depends_on:
       - minio
       - db
@@ -109,11 +114,16 @@ services:
       context: .
       dockerfile: ./go/functions/export/Dockerfile
     environment:
-      - MONGO_URI=mongodb://db:27017/tracking-detector
-      - MINIO_ACCESS_KEY=adminadmin
-      - MINIO_PRIVATE_KEY=adminadmin
-      - EXPORT_BUCKET_NAME=exports
-      - MINIO_URI=minio:9000
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
     depends_on:
       - minio
       - db
@@ -126,12 +136,38 @@ services:
       context: .
       dockerfile: ./go/functions/download/Dockerfile
     environment:
-      - MONGO_URI=mongodb://db:27017/tracking-detector
-      - MINIO_ACCESS_KEY=adminadmin
-      - MINIO_PRIVATE_KEY=adminadmin
-      - MODEL_BUCKET_NAME=models
-      - EXPORT_BUCKET_NAME=exports
-      - MINIO_URI=minio:9000
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+    depends_on:
+      - minio
+      - db
+      - loki
+    networks:
+      - app-network
+  auth:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./go/functions/auth/Dockerfile
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
     depends_on:
       - minio
       - db
@@ -144,12 +180,16 @@ services:
       context: .
       dockerfile: ./python/Dockerfile
     environment:
-      - MONGO_URI=mongodb://db:27017/tracking-detector
-      - MINIO_ACCESS_KEY=adminadmin
-      - MINIO_PRIVATE_KEY=adminadmin
-      - EXPORT_BUCKET_NAME=exports
-      - MODEL_BUCKET_NAME=models
-      - MINIO_URI=minio:9000
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
     depends_on:
       - minio
       - db
@@ -162,12 +202,16 @@ services:
       context: .
       dockerfile: ./go/functions/training-runs/Dockerfile
     environment:
-      - MONGO_URI=mongodb://db:27017/tracking-detector
-      - MINIO_ACCESS_KEY=adminadmin
-      - MINIO_PRIVATE_KEY=adminadmin
-      - MODEL_BUCKET_NAME=models
-      - EXPORT_BUCKET_NAME=exports
-      - MINIO_URI=minio:9000
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
     depends_on:
       - minio
       - db
@@ -177,6 +221,17 @@ services:
   front-end:
     restart: unless-stopped
     build: ./td-fe
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - NUXT_PUBLIC_API_BASE=${ADMIN_API_KEY}
     networks:
       - app-network
 

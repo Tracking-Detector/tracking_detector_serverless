@@ -54,6 +54,7 @@
     </div>
 </template>
 <script setup>
+const config = useRuntimeConfig()
 const props = defineProps({
     data: {
         required: true
@@ -74,6 +75,7 @@ const triggerTraining = (modelName, dataSet) => {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "X-API-Key": 'Bearer '+ config.public.apiBase
         },
         body: JSON.stringify({})
     })

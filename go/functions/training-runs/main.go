@@ -16,7 +16,7 @@ import (
 func GetTrainingRuns(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	collection := configs.GetCollection(configs.ConnectDB(), "training-runs")
+	collection := configs.GetCollection(configs.ConnectDB(), configs.EnvTrainingRunCollection())
 	var trainingRuns []models.TrainingRun
 	cursor, _ := collection.Find(ctx, bson.M{})
 	defer cursor.Close(ctx)
@@ -36,7 +36,7 @@ func GetTrainingRunsByModelName(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	modelName := c.Params("modelName")
 	defer cancel()
-	collection := configs.GetCollection(configs.ConnectDB(), "training-runs")
+	collection := configs.GetCollection(configs.ConnectDB(), configs.EnvTrainingRunCollection())
 	var trainingRuns []models.TrainingRun
 	cursor, _ := collection.Find(ctx, bson.M{
 		"name": modelName,

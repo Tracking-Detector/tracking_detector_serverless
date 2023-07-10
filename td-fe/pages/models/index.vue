@@ -38,6 +38,7 @@ const models = ref([])
 const dataSets = ref([])
 const runs = ref([])
 const isLoading = ref(false)
+const config = useRuntimeConfig()
 const selectedModel = ref("No model selected")
 const selectedDataSet = ref("")
 
@@ -45,6 +46,8 @@ const triggerTraining = () => {
     fetch(`/api/train/models/${selectedModel.value}/run/${selectedDataSet.value}`, {
         headers: {
             "Content-Type": "application/json",
+            Authorization: 'Bearer ' + config.public.apiBase
+
         },
         method: "POST",
         body: JSON.stringify({})
@@ -57,7 +60,11 @@ const getUniqueDataNames = () => {
 
 const loadModelRuns = () => {
     isLoading.value = true
-    fetch("/api/training-runs/" + selectedModel.value).then(response => {
+    fetch("/api/training-runs/" + selectedModel.value, {
+        headers: {
+            "X-API-Key": 'Bearer '+ config.public.apiBase
+        }
+    }).then(response => {
         return response.json()
     }).then(body => {
         runs.value = body.data
@@ -66,7 +73,11 @@ const loadModelRuns = () => {
 }
 const loadAvailableDataSets = () => {
     isLoading.value = true
-    fetch("/api/export").then(response => {
+    fetch("/api/export", {
+        headers: {
+            "X-API-Key": 'Bearer '+ config.public.apiBase
+        }
+    }).then(response => {
         return response.json()
     }).then(body => {
         dataSets.value = body.data.map(x => x.name)
@@ -76,7 +87,11 @@ const loadAvailableDataSets = () => {
 
 const loadAvailableModels = () => {
     isLoading.value = true
-    fetch("/api/train/models").then(response => {
+    fetch("/api/train/models", {
+        headers: {
+            "X-API-Key": 'Bearer '+ config.public.apiBase
+        }
+    }).then(response => {
         return response.json()
     }).then(body => {
         models.value = body.data

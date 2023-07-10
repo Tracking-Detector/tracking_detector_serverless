@@ -34,6 +34,7 @@
 <script setup>
 const exports = ref([])
 const isLoading = ref(true)
+const config = useRuntimeConfig()
 const alert = ref({
     isShowing: false,
     title: "Export triggered",
@@ -42,7 +43,11 @@ const alert = ref({
 
 const loadAvailableExports = () => {
     isLoading.value = true
-    fetch("/api/export").then(response => {
+    fetch("/api/export", {
+        headers: {
+            "X-API-Key": 'Bearer '+ config.public.apiBase
+        }
+    }).then(response => {
         return response.json()
     }).then(body => {
         exports.value = body.data
@@ -53,7 +58,10 @@ const loadAvailableExports = () => {
 const startExport = (name) => {
     isLoading.value = true
     fetch("/api/export/" + name + "/run", {
-        method: "POST"
+        method: "POST",
+        headers: {
+            "X-API-Key": 'Bearer '+ config.public.apiBase
+        }
     }).then(response => {
         return response.json()
     }).then(body => {

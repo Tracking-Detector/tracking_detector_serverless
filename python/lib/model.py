@@ -90,7 +90,7 @@ class Model:
             logger.info("Store Training Results to MongoDb")
             db_client = MongoClient(os.getenv("MONGO_URI"))
             db = db_client["tracking-detector"]
-            collection = db["training-runs"]
+            collection = db[os.getenv("TRAINING_RUNS_COLLECTION")]
             collection.insert_one(
                 {
                     "name": self.model_name,

@@ -22,7 +22,7 @@ import (
 )
 
 // var logger = configs.GetLogger("request-api")
-var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, "requests")
+var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, configs.EnvRequestCollection())
 var validate = validator.New()
 
 func SearchRequests(c *fiber.Ctx) error {

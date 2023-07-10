@@ -21,7 +21,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, "requests")
+var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, configs.EnvRequestCollection())
 
 func RunDataExport(fe extractor.Extractor) {
 	pr, pw := io.Pipe()
