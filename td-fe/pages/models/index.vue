@@ -46,7 +46,7 @@ const triggerTraining = () => {
     fetch(`/api/train/models/${selectedModel.value}/run/${selectedDataSet.value}`, {
         headers: {
             "Content-Type": "application/json",
-            Authorization: 'Bearer ' + config.public.apiBase
+            "X-API-Key": 'Bearer ' + config.public.apiBase
 
         },
         method: "POST",
