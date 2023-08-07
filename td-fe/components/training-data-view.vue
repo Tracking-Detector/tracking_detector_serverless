@@ -26,7 +26,7 @@
                     <v-list-item>
                         Trigger Training for {{ dataSet }}
                         <template v-slot:append>
-                            <v-btn icon="mdi-play" variant="text" @click="triggerTraining(dataSet[0].name, dataSet[0].dataSet)"></v-btn>
+                            <v-btn icon="mdi-play" variant="text" @click="triggerTraining"></v-btn>
                         </template>
                     </v-list-item>
                     <v-list-subheader>Run Metrics</v-list-subheader>
@@ -70,8 +70,8 @@ const genRunMetrics = () => {
     return data.value.filter(x => x.dataSet == dataSet.value)
 }
 
-const triggerTraining = (modelName, dataSet) => {
-    fetch(`/api/train/models/${modelName}/run/${dataSet}`, {
+const triggerTraining = () => {
+    fetch(`/api/train/models/${dataSet.value[0].name}/run/${dataSet.value[0].dataSet}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

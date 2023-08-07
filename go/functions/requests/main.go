@@ -10,6 +10,7 @@ import (
 	"tds/shared/configs"
 	"tds/shared/models"
 	"tds/shared/responses"
+	"tds/shared/utils"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -148,6 +149,7 @@ func CreateRequestData(c *fiber.Ctx) error {
 func main() {
 	app := fiber.New()
 	app.Use(cors.New())
+	app.Get("/requests/health", utils.GetHealth)
 	app.Get("/requests/:requestId", GetRequestDataById)
 	app.Post("/requests", CreateRequestData)
 	app.Get("/requests", SearchRequests)

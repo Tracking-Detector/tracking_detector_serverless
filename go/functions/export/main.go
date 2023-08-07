@@ -12,6 +12,7 @@ import (
 	"tds/shared/extractor"
 	"tds/shared/models"
 	"tds/shared/responses"
+	"tds/shared/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -137,6 +138,7 @@ func main() {
 	app := fiber.New()
 	app.Use(cors.New())
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
+	app.Get("/export/health", utils.GetHealth)
 	app.Post("/export/:extractorName/run", ExportData)
 	app.Get("/export", GetAllPossibleExports)
 

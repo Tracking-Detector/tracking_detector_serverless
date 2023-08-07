@@ -4,6 +4,12 @@ from lib.model import get_all_available_models
 
 app = FastAPI()
 
+@app.get("/train/health")
+def get_health():
+    return {
+        "status": 200,
+        "message": "System is running correct."
+    }
 
 @app.get("/train/models")
 def get_models():

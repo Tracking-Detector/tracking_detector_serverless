@@ -119,6 +119,7 @@ func main() {
 	app := fiber.New()
 	app.Use(cors.New())
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
+	app.Get("/transfer/health", utils.GetHealth)
 	app.Get("/transfer/export/:fileName", DownloadExport)
 	app.Get("/transfer/export", GetDownloadExport)
 	app.Get("/transfer/models", GetDownloadModels)

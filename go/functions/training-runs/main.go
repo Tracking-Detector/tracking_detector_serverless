@@ -6,6 +6,7 @@ import (
 	"tds/shared/configs"
 	"tds/shared/models"
 	"tds/shared/responses"
+	"tds/shared/utils"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -56,6 +57,7 @@ func GetTrainingRunsByModelName(c *fiber.Ctx) error {
 func main() {
 	app := fiber.New()
 	app.Use(cors.New())
+	app.Get("/training-runs/health", utils.GetHealth)
 	app.Get("/training-runs", GetTrainingRuns)
 	app.Get("/training-runs/:modelName", GetTrainingRunsByModelName)
 
