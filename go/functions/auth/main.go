@@ -11,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,6 +19,7 @@ var adminURIs = []string{
 	"/api/training-runs",
 	"/api/export",
 	"/api/train",
+	"/api/users",
 }
 
 func ValidateToken(c *fiber.Ctx) error {
@@ -74,45 +74,7 @@ func IsAdminURI(uri string) bool {
 	return false
 }
 
-func InitAdmin() {
-	adminApiKey := configs.EnvAdminApiKey()
-	hash, err := bcrypt.GenerateFromPassword([]byte(adminApiKey), bcrypt.DefaultCost)
-
-	if err != nil {
-		log.Fatalln("Could not generate Hash for Admin key.")
-	}
-
-	userCollection := configs.GetCollection(configs.ConnectDB(), "users")
-
-	result := userCollection.FindOne(context.Background(), bson.M{
-		"role": "admin",
-	})
-	var adminUser models.UserData
-	if err := result.Decode(&adminUser); err != nil {
-		admin := models.UserData{
-			Id:    primitive.NewObjectID(),
-			Role:  models.ADMIN,
-			Email: "henry.schwerdtner@web.de",
-			Key:   string(hash),
-		}
-		userCollection.InsertOne(context.Background(), admin)
-		return
-	}
-
-	comparingResult := bcrypt.CompareHashAndPassword([]byte(adminUser.Key), []byte(adminApiKey))
-	if comparingResult != nil {
-		userCollection.UpdateOne(context.Background(), bson.M{
-			"role": "admin",
-		}, bson.M{
-			"$set": bson.M{
-				"key": string(hash),
-			},
-		})
-	}
-}
-
 func main() {
-	InitAdmin()
 	app := fiber.New()
 	app.Use(cors.New())
 	app.Use(ValidateToken)

@@ -16,19 +16,20 @@ services:
       - mongo-express
       - export
       - minio
-      - grafana
       - requests
-      - loki
     networks:
       - app-network
   loki:
     restart: unless-stopped
-    image: grafana/loki:2.6.1
+    image: grafana/loki:2.1.0
     volumes:
       - loki_data:/loki
       - ./infra/loki/loki.yaml:/etc/loki/loki-config.yaml
+    command: -config.file="etc/loki/loki-config.yaml"
     networks:
       - app-network
+    depends_on:
+      - create-logging-buckets
   promtail:
     restart: unless-stopped
     image: grafana/promtail:2.6.1
@@ -40,7 +41,7 @@ services:
       - app-network
   grafana:
     restart: unless-stopped
-    image: grafana/grafana:9.2.2
+    image: grafana/grafana:7.3.7
     volumes:
       - grafana_data:/var/lib/grafana
       - ./infra/grafana/grafana.ini:/etc/grafana/grafana.ini
@@ -58,9 +59,23 @@ services:
     environment:
       MINIO_ROOT_USER: adminadmin
       MINIO_ROOT_PASSWORD: adminadmin
-    command: server --console-address ":9001" /data
+    command: server ~ --address ':9000' --console-address ':9001'
     networks:
       - app-network
+  create-logging-buckets:
+    image: minio/mc
+    networks:
+      - app-network
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc rm -r --force myminio/loki;
+      /usr/bin/mc mb myminio/loki;
+      /usr/bin/mc policy set public myminio/loki;
+      exit 0;
+      "
   mongo-express:
     restart: unless-stopped
     image: mongo-express:latest
@@ -82,8 +97,6 @@ services:
       - mongo_storage:/data/db
     networks:
       - app-network
-    depends_on:
-      - loki
   # Serverless Functions
   requests:
     restart: unless-stopped
@@ -104,7 +117,6 @@ services:
     depends_on:
       - minio
       - db
-      - loki
     networks:
       - app-network
   export:
@@ -126,7 +138,6 @@ services:
     depends_on:
       - minio
       - db
-      - loki
     networks:
       - app-network
   download:
@@ -148,7 +159,6 @@ services:
     depends_on:
       - minio
       - db
-      - loki
     networks:
       - app-network
   auth:
@@ -170,7 +180,27 @@ services:
     depends_on:
       - minio
       - db
-      - loki
+    networks:
+      - app-network
+  users:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./go/functions/users/Dockerfile
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+    depends_on:
+      - minio
+      - db
     networks:
       - app-network
   training:
@@ -192,7 +222,6 @@ services:
     depends_on:
       - minio
       - db
-      - loki
     networks:
       - app-network
   training-runs:
@@ -214,7 +243,6 @@ services:
     depends_on:
       - minio
       - db
-      - loki
     networks:
       - app-network
   front-end:

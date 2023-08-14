@@ -17,3 +17,12 @@ type UserData struct {
 	Email string             `json:"email"`
 	Key   string             `json:"key"`
 }
+
+type CreateUserData struct {
+	Email string `json:"email"`
+}
+
+type UserDataRepresentation struct {
+	Email string `json:"email"`
+	Role  Role   `json:"role"`
+}
