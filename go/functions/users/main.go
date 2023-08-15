@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
+
 	"net/http"
-	"strings"
 	"tds/shared/configs"
 	"tds/shared/models"
 	"tds/shared/responses"
@@ -13,77 +11,24 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var adminURIs = []string{
-	"/api/requests",
-	"/api/training-runs",
-	"/api/export",
-	"/api/train",
-}
-
-func ValidateToken(c *fiber.Ctx) error {
-	originalURI := c.Get("X-Original-URI")
-	apiKey := c.Get("X-API-Key")
-	isAdminUri := IsAdminURI(originalURI)
-	res := ValidateApiKey(apiKey, isAdminUri)
-	if res {
-		return c.SendStatus(http.StatusOK)
-	} else {
-		return c.SendStatus(http.StatusForbidden)
-	}
-}
-
-func ValidateApiKey(apiKey string, isAdmin bool) bool {
-	split := strings.Split(apiKey, " ")
-	if len(split) != 2 || split[0] != "Bearer" {
-		return false
-	}
-	userCollection := configs.GetCollection(configs.ConnectDB(), configs.EnvUserCollection())
-	cursor, err := userCollection.Find(context.Background(), bson.M{})
-	if err != nil {
-		log.Fatal("Failed to query MongoDB collection:", err)
-	}
-	defer cursor.Close(context.Background())
-
-	for cursor.Next(context.Background()) {
-		var doc models.UserData
-		if err := cursor.Decode(&doc); err != nil {
-			log.Println("Failed to decode MongoDB document:", err)
-			continue
-		}
-		if err := bcrypt.CompareHashAndPassword([]byte(doc.Key), []byte(split[1])); err == nil {
-			if isAdmin {
-				if doc.Role == models.ADMIN {
-					return true
-				}
-			} else {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func IsAdminURI(uri string) bool {
-	for _, adminURI := range adminURIs {
-		if strings.HasPrefix(uri, adminURI) {
-			return true
-		}
-	}
-	return false
-}
 
 func InitAdmin() {
 	adminApiKey := configs.EnvAdminApiKey()
 	hash, err := bcrypt.GenerateFromPassword([]byte(adminApiKey), bcrypt.DefaultCost)
 
 	if err != nil {
-		log.Fatalln("Could not generate Hash for Admin key.")
+		log.WithFields(log.Fields{
+			"service": "users",
+			"error":   err.Error(),
+		}).Fatal("Could not generate Hash for Admin key.")
 	}
 
 	userCollection := configs.GetCollection(configs.ConnectDB(), "users")
@@ -94,7 +39,6 @@ func InitAdmin() {
 	var adminUser models.UserData
 	if err := result.Decode(&adminUser); err != nil {
 		admin := models.UserData{
-			Id:    primitive.NewObjectID(),
 			Role:  models.ADMIN,
 			Email: "henry.schwerdtner@web.de",
 			Key:   string(hash),
@@ -130,11 +74,11 @@ func CreateAPIKey(c *fiber.Ctx) error {
 	result := userCollection.FindOne(ctx, bson.M{
 		"email": userData.Email,
 	})
-	if result != nil {
+	if result.Err() != mongo.ErrNoDocuments {
 		return c.Status(http.StatusBadRequest).JSON(responses.RequestDataResponse{
 			Status:  http.StatusBadRequest,
 			Message: "error",
-			Data:    &fiber.Map{"data": "A user with this email address already exists."}})
+			Data:    &fiber.Map{"data": "user already exisits."}})
 	}
 	key := uuid.New().String()
 	hash, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
@@ -145,7 +89,6 @@ func CreateAPIKey(c *fiber.Ctx) error {
 			Data:    &fiber.Map{"data": "Could not generate hash of api key."}})
 	}
 	newUser := models.UserData{
-		Id:    primitive.NewObjectID(),
 		Role:  models.CLIENT,
 		Email: userData.Email,
 		Key:   string(hash),
@@ -155,7 +98,7 @@ func CreateAPIKey(c *fiber.Ctx) error {
 		Status:  http.StatusOK,
 		Message: "success",
 		Data: &fiber.Map{"data": &fiber.Map{
-			"key": string(hash),
+			"key": string(key),
 		}}})
 
 }
@@ -178,18 +121,66 @@ func GetUsers(c *fiber.Ctx) error {
 		cursor.Decode(&user)
 		userData = append(userData, user)
 	}
-	fmt.Println(userData)
 	return c.Status(http.StatusOK).JSON(responses.RequestDataResponse{
 		Status:  http.StatusOK,
 		Message: "success",
 		Data:    &fiber.Map{"data": userData}})
 }
 
+func DeleteUserById(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	userId := c.Params("userId")
+	userCollection := configs.GetCollection(configs.ConnectDB(), "users")
+	objectId, objectIdError := primitive.ObjectIDFromHex(userId)
+	if objectIdError != nil {
+		return c.Status(http.StatusBadRequest).JSON(responses.RequestDataResponse{
+			Status:  http.StatusBadRequest,
+			Message: "error",
+			Data:    &fiber.Map{"data": "No objectId passed as a param."}})
+	}
+	result := userCollection.FindOne(ctx, bson.M{"_id": objectId})
+	var userToDelete models.UserData
+
+	if err := result.Decode(&userToDelete); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(responses.RequestDataResponse{
+			Status:  http.StatusInternalServerError,
+			Message: "error",
+			Data:    &fiber.Map{"data": err.Error()}})
+	}
+
+	if userToDelete.Role == models.ADMIN {
+		return c.Status(http.StatusBadRequest).JSON(responses.RequestDataResponse{
+			Status:  http.StatusBadRequest,
+			Message: "error",
+			Data:    &fiber.Map{"data": "Impossible to delete the system admin user."}})
+	}
+
+	_, deletionError := userCollection.DeleteOne(ctx, bson.M{
+		"_id":   objectId,
+		"email": userToDelete.Email,
+	})
+
+	if deletionError != nil {
+		return c.Status(http.StatusInternalServerError).JSON(responses.RequestDataResponse{
+			Status:  http.StatusInternalServerError,
+			Message: "error",
+			Data:    &fiber.Map{"data": deletionError.Error()}})
+	}
+	return c.Status(http.StatusInternalServerError).JSON(responses.RequestDataResponse{
+		Status:  http.StatusOK,
+		Message: "success",
+		Data:    &fiber.Map{"data": "User has been deleted."}})
+
+}
+
 func main() {
 	InitAdmin()
 	app := fiber.New()
 	app.Use(cors.New())
+	app.Use(logger.New())
 	app.Get("/users", GetUsers)
 	app.Post("/users", CreateAPIKey)
+	app.Delete("/users/:userId", DeleteUserById)
 	app.Listen(":8081")
 }

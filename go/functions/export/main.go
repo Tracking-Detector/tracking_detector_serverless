@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"log"
+
 	"net/http"
 	"strings"
 	"tds/shared/configs"
@@ -16,8 +16,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/minio/minio-go/v7"
 	"github.com/robfig/cron/v3"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -35,14 +37,20 @@ func RunDataExport(fe extractor.Extractor) {
 
 		cursor, err := requestDataCollection.Find(context.Background(), bson.M{})
 		if err != nil {
-			log.Fatal("Failed to query MongoDB collection:", err)
+			log.WithFields(log.Fields{
+				"service": "export",
+				"error":   err.Error(),
+			}).Fatal("Failed to query MongoDB collection.")
 		}
 		defer cursor.Close(context.Background())
 
 		for cursor.Next(context.Background()) {
 			var doc models.RequestData
 			if err := cursor.Decode(&doc); err != nil {
-				log.Println("Failed to decode MongoDB document:", err)
+				log.WithFields(log.Fields{
+					"service": "export",
+					"error":   err.Error(),
+				}).Error("Failed to decode MongoDB document.")
 				continue
 			}
 			encoded, encodeErr := fe.Encode(doc)
@@ -51,29 +59,42 @@ func RunDataExport(fe extractor.Extractor) {
 			}
 			arr, err := json.Marshal(encoded)
 			if err != nil {
-				log.Fatal("Could not convert int[] to string")
+				log.WithFields(log.Fields{
+					"service": "export",
+					"error":   err.Error(),
+				}).Fatal("Could not convert int[] to string.")
 				continue
 			}
 			data := strings.Trim(string(arr), "[]") + "\n"
 
 			if _, err := gzipWriter.Write([]byte(data)); err != nil {
-				log.Println("Failed to write to gzip writer:", err)
+				log.WithFields(log.Fields{
+					"service": "export",
+					"error":   err.Error(),
+				}).Error("Failed to write to gzip writer.")
 				break
 			}
 		}
 
 		if cursor.Err() != nil {
-			log.Println("Error occurred while iterating MongoDB cursor:", cursor.Err())
+			log.WithFields(log.Fields{
+				"service": "export",
+				"error":   cursor.Err().Error(),
+			}).Error("Error occurred while iterating MongoDB cursor.")
 		}
 	}()
 	_, putErr := configs.MINIO.PutObject(context.Background(), configs.EnvExportBucketName(), fe.GetFileName(), pr, -1, minio.PutObjectOptions{
 		ContentType: "application/gzip",
 	})
 	if putErr != nil {
-		log.Fatal("Failed to upload data to MinIO:", putErr)
+		log.WithFields(log.Fields{
+			"service": "export",
+			"error":   putErr.Error(),
+		}).Fatal("Failed to upload data to MinIO.")
 	}
-
-	log.Println("Data compression and upload for " + fe.GetName() + " completed successfully!")
+	log.WithFields(log.Fields{
+		"service": "export",
+	}).Info("Data compression and upload for " + fe.GetName() + " completed successfully.")
 
 }
 
@@ -128,7 +149,10 @@ func SetupCron() {
 	c := cron.New()
 	_, err := c.AddFunc("0 0 */14 * *", RunAllExtractors)
 	if err != nil {
-		log.Fatalln("Failed to add cron job", err)
+		log.WithFields(log.Fields{
+			"service": "export",
+			"error":   err.Error(),
+		}).Fatal("Failed to add cron job.")
 	}
 	c.Start()
 }
@@ -137,6 +161,7 @@ func main() {
 	SetupCron()
 	app := fiber.New()
 	app.Use(cors.New())
+	app.Use(logger.New())
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
 	app.Get("/export/health", utils.GetHealth)
 	app.Post("/export/:extractorName/run", ExportData)

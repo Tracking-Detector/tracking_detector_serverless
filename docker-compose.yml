@@ -9,16 +9,26 @@ services:
     image: nginx
     ports:
       - 80:80
-      - 8081:8081
+      - 443:443
     volumes:
       - ./infra/api-gateway/:/etc/nginx:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     depends_on:
       - mongo-express
       - export
       - minio
       - requests
+      # - certbot
     networks:
       - app-network
+  # certbot:
+  #   image: certbot/certbot
+  #   container_name: certbot
+  #   volumes: 
+  #     - ./certbot/conf:/etc/letsencrypt
+  #     - ./certbot/www:/var/www/certbot
+  #   command: certonly --webroot -w /var/www/certbot --force-renewal --email henry.schwerdtner@web.de -d localhost --agree-tos
   loki:
     restart: unless-stopped
     image: grafana/loki:2.1.0
@@ -70,7 +80,7 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc config host add myminio http://minio:9000 adminadmin adminadmin;
       /usr/bin/mc rm -r --force myminio/loki;
       /usr/bin/mc mb myminio/loki;
       /usr/bin/mc policy set public myminio/loki;

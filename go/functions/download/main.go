@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -14,12 +13,16 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/minio/minio-go/v7"
+	log "github.com/sirupsen/logrus"
 )
 
 func DownloadExport(c *fiber.Ctx) error {
-	log.Println("Started download")
 	filename := c.Params("filename")
+	log.WithFields(log.Fields{
+		"service": "download",
+	}).Info("Download started for file ", filename, " from IP: ", c.IP())
 	object, err := configs.MINIO.GetObject(context.Background(), configs.EnvExportBucketName(), filename, minio.GetObjectOptions{})
 	if err != nil {
 		return c.Status(http.StatusNotFound).JSON(&responses.DownloadResponse{
@@ -66,6 +69,9 @@ func GetDownloadExport(c *fiber.Ctx) error {
 func GetZippedModel(c *fiber.Ctx) error {
 	log.Println("Started download")
 	modelName := c.Params("modelName")
+	log.WithFields(log.Fields{
+		"service": "download",
+	}).Info("Download started for model ", modelName, " from IP: ", c.IP())
 	zippedModelName := c.Params("zippedModelName")
 	object, err := configs.MINIO.GetObject(context.Background(), configs.EnvModelBucketName(), modelName+"/"+zippedModelName, minio.GetObjectOptions{})
 	if err != nil {
@@ -93,6 +99,9 @@ func GetModelData(c *fiber.Ctx) error {
 	modelName := c.Params("modelName")
 	trainingSet := c.Params("trainingSet")
 	fileName := c.Params("filename")
+	log.WithFields(log.Fields{
+		"service": "download",
+	}).Info("Download started for model ", modelName, ", trainingSet ", trainingSet, " and fileName ", fileName, " from IP: ", c.IP())
 	object, err := configs.MINIO.GetObject(context.Background(), configs.EnvModelBucketName(), modelName+"/"+trainingSet+"/"+fileName, minio.GetObjectOptions{})
 	if err != nil {
 		return c.Status(http.StatusNotFound).JSON(&responses.DownloadResponse{
@@ -118,6 +127,7 @@ func GetModelData(c *fiber.Ctx) error {
 func main() {
 	app := fiber.New()
 	app.Use(cors.New())
+	app.Use(logger.New())
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
 	app.Get("/transfer/health", utils.GetHealth)
 	app.Get("/transfer/export/:fileName", DownloadExport)

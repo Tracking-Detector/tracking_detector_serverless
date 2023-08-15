@@ -2,9 +2,9 @@ package configs
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -26,7 +26,9 @@ func ConnectDB() *mongo.Client {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Connected to MongoDB")
+	log.WithFields(log.Fields{
+		"service": "setup",
+	}).Info("Successfully connected to MongoDB.")
 	return client
 }
 
@@ -38,7 +40,9 @@ func ConnectMinio() *minio.Client {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println("Connected to MinIO")
+	log.WithFields(log.Fields{
+		"service": "setup",
+	}).Info("Successfully connected to MinIO.")
 	return minioClient
 }
 
@@ -53,16 +57,25 @@ func GetCollection(client *mongo.Client, collectionName string) *mongo.Collectio
 
 func VerifyBucketExists(ctx context.Context, client *minio.Client, bucketName string) {
 	if exists, err := client.BucketExists(ctx, bucketName); err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{
+			"service": "setup",
+			"error":   err.Error(),
+		}).Fatal("Error verifing whether bucket exisits.")
 	} else if exists {
 	} else {
 		if makeBucketError := client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: "eu-central-1"}); makeBucketError != nil {
-			log.Fatal(makeBucketError)
+			log.WithFields(log.Fields{
+				"service": "setup",
+				"error":   makeBucketError.Error(),
+			}).Fatal("Error creating bucket with name ", bucketName, ".")
 		} else {
 			if setVersioningError := client.SetBucketVersioning(ctx, bucketName, minio.BucketVersioningConfiguration{
 				Status: "Enabled",
 			}); setVersioningError != nil {
-				log.Fatal(setVersioningError)
+				log.WithFields(log.Fields{
+					"service": "setup",
+					"error":   makeBucketError.Error(),
+				}).Fatal("Error setting versioning for bucket with name ", bucketName, ".")
 			}
 		}
 	}

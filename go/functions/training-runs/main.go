@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -57,10 +58,9 @@ func GetTrainingRunsByModelName(c *fiber.Ctx) error {
 func main() {
 	app := fiber.New()
 	app.Use(cors.New())
+	app.Use(logger.New())
 	app.Get("/training-runs/health", utils.GetHealth)
 	app.Get("/training-runs", GetTrainingRuns)
 	app.Get("/training-runs/:modelName", GetTrainingRunsByModelName)
-
-	// logger.Info("Server Running")
 	app.Listen(":8081")
 }

@@ -6,11 +6,10 @@
         <p style="width: 600px;" class="mb-4">On this page you can create and remove API-KEYS for users of the web
             extension.</p>
         <v-card>
+
             <v-list>
                 <v-list-subheader>
                     Users
-                    <v-spacer></v-spacer>
-                    <v-btn variant="text">ADD</v-btn>
                 </v-list-subheader>
                 <v-divider></v-divider>
                 <v-list-item v-for="user of userData">
@@ -25,10 +24,20 @@
                         {{ user.role }}
                     </v-chip>
                     <template v-slot:append>
-                        <v-btn v-if="user.role != 'admin'" color="red" icon="mdi-delete" variant="text"></v-btn>
+                        <v-btn v-if="user.role != 'admin'" color="red" icon="mdi-delete" variant="text"
+                            @click="deleteUser(user['_id'])"></v-btn>
                     </template>
                 </v-list-item>
             </v-list>
+        </v-card>
+        <v-card class="mt-2">
+            <v-card-title>
+                Create Users
+            </v-card-title>
+            <div class="ma-4">
+                <v-text-field v-model="email" label="Email" required></v-text-field>
+                <v-btn class="mt-2" @click="createNewUser">Create User</v-btn>
+            </div>
         </v-card>
     </div>
 </template>
@@ -58,20 +67,47 @@ const loadUserData = () => {
     })
 }
 
-const createNewUser = (name) => {
+const createNewUser = () => {
+    if (email.value == "") {
+        alert.value.message = `No email provided`
+        alert.value.isShowing = true
+        return
+    }
     isLoading.value = true
     fetch("/api/users", {
         method: "POST",
         headers: {
-            "X-API-Key": 'Bearer ' + config.public.apiBase
-        }
+            "X-API-Key": 'Bearer ' + config.public.apiBase,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            email: email.value
+        })
     }).then(response => {
+
         return response.json()
     }).then(body => {
-
-        alert.value.message = body.message + ` with key ${body.data.key}`
+        loadUserData()
+        alert.value.message = body.message + ` with key ${JSON.stringify(body.data)}`
         isLoading.value = false
         alert.value.isShowing = true
+        email.value = ""
+    })
+
+}
+
+const deleteUser = (id) => {
+    fetch("/api/users/" + id, {
+        method: "DELETE",
+        headers: {
+            "X-API-Key": 'Bearer ' + config.public.apiBase,
+        },
+    }).then(response => {
+
+        return response.json()
+    }).then(body => {
+        loadUserData()
+        console.log(JSON.stringify(body))
     })
 }
 

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -16,6 +15,7 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,7 +27,6 @@ var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, 
 var validate = validator.New()
 
 func SearchRequests(c *fiber.Ctx) error {
-	log.Println("Search")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	var requestDataValues []models.RequestData
@@ -149,6 +148,7 @@ func CreateRequestData(c *fiber.Ctx) error {
 func main() {
 	app := fiber.New()
 	app.Use(cors.New())
+	app.Use(logger.New())
 	app.Get("/requests/health", utils.GetHealth)
 	app.Get("/requests/:requestId", GetRequestDataById)
 	app.Post("/requests", CreateRequestData)

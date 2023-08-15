@@ -12,17 +12,18 @@ const (
 )
 
 type UserData struct {
-	Id    primitive.ObjectID `json:"_id,omitempty"`
-	Role  Role               `json:"role"`
-	Email string             `json:"email"`
-	Key   string             `json:"key"`
+	Id    primitive.ObjectID `bson:"_id,omitempty"`
+	Role  Role               `bson:"role"`
+	Email string             `bson:"email"`
+	Key   string             `bson:"key"`
 }
 
 type CreateUserData struct {
-	Email string `json:"email"`
+	Email string `bson:"email"`
 }
 
 type UserDataRepresentation struct {
-	Email string `json:"email"`
-	Role  Role   `json:"role"`
+	Id    primitive.ObjectID `json:"_id" bson:"_id"`
+	Email string             `json:"email" bson:"email"`
+	Role  Role               `json:"role" bson:"role"`
 }
