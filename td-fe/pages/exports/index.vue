@@ -1,8 +1,8 @@
 <template>
     <div>
         
-        <h3 class="mb-4">Welcome on Exports</h3>
-        <p style="width: 600px;" class="mb-4">Here you can see all the available exports for the data. Each export exports
+        <h3 class="mb-4 text-h5">Welcome on Exports</h3>
+        <p style="width: 600px;" class="mb-4 text-body-1">Here you can see all the available exports for the data. Each export exports
             into a .csv.gz file and stores
             it into the MinIO export bucket. You can download each export on the download page. This page can be useful in
             case you want to manually start a export

@@ -1,7 +1,7 @@
 <template>
     <div>
-        <h3 class="mb-4">Welcome on Models</h3>
-        <p style="width: 600px;" class="mb-4">
+        <h3 class="mb-4 text-h5">Welcome on Models</h3>
+        <p style="width: 600px;" class="mb-4 text-body-1">
             Here you can explore the different models and trigger the training process for different datasets. Additionally
             you can see great insights
             on the models performance and other metrics of each training run for each dataset.
@@ -13,7 +13,7 @@
                 <v-select density="compact" style="width: 300px;" v-model="selectedModel" label="Select Model"
                     :items="models.map(x => x.name)"></v-select>
                 <div v-if="selectedModel != 'No model selected'">
-                    <h4 class="mb-2">Run Training on DataSet</h4>
+                    <h4 class="mb-2 text-h6">Run Training on DataSet</h4>
                     <div class="d-flex">
                         <v-select density="compact" style="max-width: 300px;" v-model="selectedDataSet"
                             label="Dataset to train the model on" :items="dataSets"></v-select>

@@ -1,7 +1,7 @@
 <template>
     <div>
-        <h3 class="mb-4">API-KEYS</h3>
-        <p style="width: 600px;" class="mb-4">On this page you can create and remove API-KEYS for users of the web
+        <h3 class="mb-4 text-h5">API-KEYS</h3>
+        <p style="width: 600px;" class="mb-4 text-body-1">On this page you can create and remove API-KEYS for users of the web
             extension.</p>
         <v-card>
             <v-card-title>

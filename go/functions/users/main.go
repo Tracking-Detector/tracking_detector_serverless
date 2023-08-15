@@ -7,6 +7,7 @@ import (
 	"tds/shared/configs"
 	"tds/shared/models"
 	"tds/shared/responses"
+	"tds/shared/utils"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -177,6 +178,7 @@ func main() {
 	app := fiber.New()
 	app.Use(cors.New())
 	app.Use(logger.New())
+	app.Get("/users/health", utils.GetHealth)
 	app.Get("/users", GetUsers)
 	app.Post("/users", CreateAPIKey)
 	app.Delete("/users/:userId", DeleteUserById)

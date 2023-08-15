@@ -1,7 +1,7 @@
 <template>
     <div>
-        <h3 class="mb-4">Welcome on Downloads</h3>
-        <p style="width: 600px;" class="mb-4">Here are all the available downloadable files in one place.
+        <h3 class="mb-4 text-h5">Welcome on Downloads</h3>
+        <p style="width: 600px;" class="mb-4 text-body-1">Here are all the available downloadable files in one place.
             There a dataset exports available in the export directory and trained models in the models directory.</p>
 
         <v-card elevation="2">
