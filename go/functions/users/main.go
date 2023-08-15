@@ -94,12 +94,10 @@ func CreateAPIKey(c *fiber.Ctx) error {
 		Key:   string(hash),
 	}
 	userCollection.InsertOne(ctx, newUser)
-	return c.Status(http.StatusOK).JSON(responses.RequestDataResponse{
-		Status:  http.StatusOK,
+	return c.Status(http.StatusCreated).JSON(responses.RequestDataResponse{
+		Status:  http.StatusCreated,
 		Message: "success",
-		Data: &fiber.Map{"data": &fiber.Map{
-			"key": string(key),
-		}}})
+		Data:    &fiber.Map{"data": "User created with API-Key: '" + key + "'"}})
 
 }
 
@@ -167,7 +165,7 @@ func DeleteUserById(c *fiber.Ctx) error {
 			Message: "error",
 			Data:    &fiber.Map{"data": deletionError.Error()}})
 	}
-	return c.Status(http.StatusInternalServerError).JSON(responses.RequestDataResponse{
+	return c.Status(http.StatusOK).JSON(responses.RequestDataResponse{
 		Status:  http.StatusOK,
 		Message: "success",
 		Data:    &fiber.Map{"data": "User has been deleted."}})

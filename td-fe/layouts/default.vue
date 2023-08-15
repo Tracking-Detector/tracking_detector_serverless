@@ -46,7 +46,10 @@
         </v-navigation-drawer>
 
         <v-main class="ma-4">
-            <slot />
+            <div class="pa-4">
+                <slot />
+            </div>
+
         </v-main>
     </v-layout>
 </template>

@@ -1,17 +1,14 @@
 <template>
-    <div class="pa-4">
-        <v-alert v-model="alert.isShowing" color="success" icon="$success" :title="alert.title" :text="alert.message"
-            closable></v-alert>
+    <div>
         <h3 class="mb-4">API-KEYS</h3>
         <p style="width: 600px;" class="mb-4">On this page you can create and remove API-KEYS for users of the web
             extension.</p>
         <v-card>
-
-            <v-list>
-                <v-list-subheader>
-                    Users
-                </v-list-subheader>
-                <v-divider></v-divider>
+            <v-card-title>
+                Users
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-list class="mt-2">
                 <v-list-item v-for="user of userData">
                     <template v-slot:prepend>
                         <v-avatar :color="user.role == 'admin' ? 'red' : 'green'">
@@ -20,7 +17,7 @@
                         </v-avatar>
                     </template>
                     {{ user.email }}
-                    <v-chip>
+                    <v-chip :color="user.role == 'admin' ? 'red' : 'green'">
                         {{ user.role }}
                     </v-chip>
                     <template v-slot:append>
@@ -34,7 +31,10 @@
             <v-card-title>
                 Create Users
             </v-card-title>
+            <v-divider></v-divider>
             <div class="ma-4">
+                <v-alert v-model="alert.isShowing" :color="alert.color" :icon="'$' + alert.color" :title="alert.title"
+                    :text="alert.message" closable></v-alert>
                 <v-text-field v-model="email" label="Email" required></v-text-field>
                 <v-btn class="mt-2" @click="createNewUser">Create User</v-btn>
             </div>
@@ -49,7 +49,8 @@ const config = useRuntimeConfig()
 const alert = ref({
     isShowing: false,
     title: "User created",
-    message: ""
+    message: "",
+    color: "success"
 })
 
 const loadUserData = () => {
@@ -81,14 +82,20 @@ const createNewUser = () => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            email: email.value
+            email: email.value.trim()
         })
     }).then(response => {
-
+        if (response.status != 201) {
+            alert.value.color = "error"
+            alert.value.title = "Error creating user"
+        } else {
+            alert.value.color = "success"
+            alert.value.title = "User created sucessfully"
+        }
         return response.json()
     }).then(body => {
         loadUserData()
-        alert.value.message = body.message + ` with key ${JSON.stringify(body.data)}`
+        alert.value.message = body.data.data
         isLoading.value = false
         alert.value.isShowing = true
         email.value = ""

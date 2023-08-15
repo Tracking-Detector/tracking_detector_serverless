@@ -17,7 +17,6 @@ import (
 )
 
 var adminURIs = []string{
-	"/api/requests",
 	"/api/training-runs",
 	"/api/export",
 	"/api/train",

@@ -82,6 +82,9 @@ func RunDataExport(fe extractor.Extractor) {
 				"error":   cursor.Err().Error(),
 			}).Error("Error occurred while iterating MongoDB cursor.")
 		}
+		log.WithFields(log.Fields{
+			"service": "export",
+		}).Info("Data compression and upload for " + fe.GetName() + " completed successfully.")
 	}()
 	_, putErr := configs.MINIO.PutObject(context.Background(), configs.EnvExportBucketName(), fe.GetFileName(), pr, -1, minio.PutObjectOptions{
 		ContentType: "application/gzip",
@@ -92,9 +95,6 @@ func RunDataExport(fe extractor.Extractor) {
 			"error":   putErr.Error(),
 		}).Fatal("Failed to upload data to MinIO.")
 	}
-	log.WithFields(log.Fields{
-		"service": "export",
-	}).Info("Data compression and upload for " + fe.GetName() + " completed successfully.")
 
 }
 

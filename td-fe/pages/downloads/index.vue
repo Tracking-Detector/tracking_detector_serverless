@@ -1,5 +1,5 @@
 <template>
-    <div class="pa-4">
+    <div>
         <h3 class="mb-4">Welcome on Downloads</h3>
         <p style="width: 600px;" class="mb-4">Here are all the available downloadable files in one place.
             There a dataset exports available in the export directory and trained models in the models directory.</p>
@@ -148,9 +148,17 @@ onMounted(() => {
             "X-API-Key": 'Bearer ' + config.public.apiBase
         }
     }).then(response => {
-        return response.json()
+        if (response.status != 200) {
+            return undefined
+        } else {
+            return response.json()
+        }
+       
     }).then(body => {
-        downloadableData.value.models = body
+        if (body != undefined) {
+            downloadableData.value.models = body
+        }
+        
         transformToFolderArchitecture()
     })
     fetch("/api/transfer/export", {
@@ -158,9 +166,15 @@ onMounted(() => {
             "X-API-Key": 'Bearer ' + config.public.apiBase
         }
     }).then(response => {
-        return response.json()
+        if (response.status != 200) {
+            return undefined
+        } else {
+            return response.json()
+        }
     }).then(body => {
-        downloadableData.value.export = body
+        if (body != undefined) {
+            downloadableData.value.export = body
+        }
         transformToFolderArchitecture()
     })
 })

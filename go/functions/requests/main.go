@@ -145,6 +145,35 @@ func CreateRequestData(c *fiber.Ctx) error {
 		Data:    &fiber.Map{"data": result}})
 }
 
+func CreateMultipleRequestData(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	var requestData []models.RequestData
+	defer cancel()
+
+	if err := c.BodyParser(&requestData); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(responses.RequestDataResponse{
+			Status:  http.StatusBadRequest,
+			Message: "error",
+			Data:    &fiber.Map{"data": err.Error()}})
+	}
+	var interfaceSlice []interface{} = make([]interface{}, len(requestData))
+	for i, d := range requestData {
+		interfaceSlice[i] = d
+	}
+	_, err := requestDataCollection.InsertMany(ctx, interfaceSlice)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(responses.RequestDataResponse{
+			Status:  http.StatusInternalServerError,
+			Message: "error",
+			Data:    &fiber.Map{"data": err.Error()}})
+	}
+
+	return c.Status(http.StatusCreated).JSON(responses.RequestDataResponse{
+		Status:  http.StatusCreated,
+		Message: "success",
+		Data:    &fiber.Map{"data": "Successfully inserted requests."}})
+}
+
 func main() {
 	app := fiber.New()
 	app.Use(cors.New())
@@ -152,6 +181,7 @@ func main() {
 	app.Get("/requests/health", utils.GetHealth)
 	app.Get("/requests/:requestId", GetRequestDataById)
 	app.Post("/requests", CreateRequestData)
+	app.Post("/requests/multiple", CreateMultipleRequestData)
 	app.Get("/requests", SearchRequests)
 	// logger.Info("Server Running")
 	app.Listen(":8081")

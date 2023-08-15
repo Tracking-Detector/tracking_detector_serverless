@@ -1,9 +1,8 @@
 <template>
-    <div class="pa-4">
-        <v-alert v-model="alert.isShowing" color="success" icon="$success" :title="alert.title" :text="alert.message"
-            closable></v-alert>
+    <div>
+        
         <h3 class="mb-4">Welcome on Exports</h3>
-        <p style="width: 800px;" class="mb-4">Here you can see all the available exports for the data. Each export exports
+        <p style="width: 600px;" class="mb-4">Here you can see all the available exports for the data. Each export exports
             into a .csv.gz file and stores
             it into the MinIO export bucket. You can download each export on the download page. This page can be useful in
             case you want to manually start a export
@@ -11,8 +10,13 @@
             automatically.
         </p>
         <v-card class="pa-4">
-            <v-list>
-                <v-list-subheader>Available Exports</v-list-subheader>
+            <v-alert v-model="alert.isShowing" color="success" icon="$success" :title="alert.title" :text="alert.message"
+            closable></v-alert>
+            <v-card-title>
+                Available Exports
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-list class="mt-2">
                 <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
                 <div v-for="avex in exports">
                     <v-list-item>

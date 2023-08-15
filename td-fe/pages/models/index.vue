@@ -1,17 +1,17 @@
 <template>
     <div>
         <h3 class="mb-4">Welcome on Models</h3>
-        <p style="width: 800px;" class="mb-4">
+        <p style="width: 600px;" class="mb-4">
             Here you can explore the different models and trigger the training process for different datasets. Additionally
             you can see great insights
             on the models performance and other metrics of each training run for each dataset.
         </p>
         <v-card>
             <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
+           
             <div class="pa-4">
                 <v-select density="compact" style="width: 300px;" v-model="selectedModel" label="Select Model"
                     :items="models.map(x => x.name)"></v-select>
-
                 <div v-if="selectedModel != 'No model selected'">
                     <h4 class="mb-2">Run Training on DataSet</h4>
                     <div class="d-flex">
@@ -21,7 +21,7 @@
                         <v-btn icon="mdi-play" variant="text" @click="triggerTraining()"></v-btn>
                     </div>
 
-                    <training-data-view v-for="dataset in getUniqueDataNames()" :data="runs"
+                    <training-data-view v-if="runs != undefined && runs.length > 0" v-for="dataset in getUniqueDataNames()" :data="runs"
                         :dataSet="dataset"></training-data-view>
                 </div>
 
@@ -65,9 +65,14 @@ const loadModelRuns = () => {
             "X-API-Key": 'Bearer '+ config.public.apiBase
         }
     }).then(response => {
+        if (response.status != 200) {
+            return undefined
+        }
         return response.json()
     }).then(body => {
-        runs.value = body.data
+        if (body != undefined) {
+            runs.value = body.data
+        }
         isLoading.value = false
     })
 }
