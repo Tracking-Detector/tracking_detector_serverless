@@ -4,6 +4,15 @@ name: tracking-detector
 
 services:
   # Infra
+  htpasswd-generator:
+    image: httpd:alpine
+    command: sh -c "htpasswd -bc /etc/nginx/.htpasswd $$USER $$PASS"
+    environment:
+      - USER=${ADMIN_USERNAME}
+      - PASS=${ADMIN_PASSWORD}
+    volumes:
+      - ./infra/api-gateway/:/etc/nginx/
+
   api-gateway:
     restart: unless-stopped
     image: nginx
@@ -19,6 +28,7 @@ services:
       - export
       - minio
       - requests
+      - htpasswd-generator
       # - certbot
     networks:
       - app-network
