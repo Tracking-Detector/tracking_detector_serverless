@@ -4,3 +4,4 @@ __pycache__
 .htpasswd
 certbot
 .env
+nginx.conf

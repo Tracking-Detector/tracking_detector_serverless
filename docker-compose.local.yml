@@ -1,6 +1,6 @@
 version: '3.7'
 
-name: tracking-detector
+name: tracking-detector-local
 
 services:
   # Infra
@@ -35,15 +35,12 @@ services:
     networks:
       - app-network
   certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes: 
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
+    image: alpine:3.12
+    command: /bin/sh -c "mkdir -p /etc/letsencrypt/live/${DOMAIN} && apk add openssl && openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/letsencrypt/live/${DOMAIN}/privkey.pem -out /etc/letsencrypt/live/${DOMAIN}/fullchain.pem -subj '/CN=${DOMAIN}'"
     environment:
       - DOMAIN=${DOMAIN}
-      - EMAIL=${EMAIL}
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${EMAIL} -d ${DOMAIN} --agree-tos --no-eff-email
+    volumes: 
+      - ./certbot/conf:/etc/letsencrypt
   loki:
     restart: unless-stopped
     image: grafana/loki:2.1.0

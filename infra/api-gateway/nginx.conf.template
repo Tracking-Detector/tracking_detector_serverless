@@ -19,7 +19,7 @@ http {
     server {
         listen 80;
 
-        server_name localhost;
+        server_name $DOMAIN;
 
         return 301 https://$host$request_uri;
     }
@@ -27,9 +27,9 @@ http {
     server {
         #listen 80;
         listen 443 ssl;
-        ssl_certificate     /etc/letsencrypt/live/localhost/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/localhost/privkey.pem;
-        server_name localhost;
+        ssl_certificate     /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+        server_name $DOMAIN;
 
         location ~ /.well-known/acme-challenge/ {
             root /var/www/certbot;
