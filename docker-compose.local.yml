@@ -88,11 +88,14 @@ services:
     image: minio/mc
     networks:
       - app-network
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
     depends_on:
       - minio
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 adminadmin adminadmin;
+      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_PRIVATE_KEY};
       /usr/bin/mc rm -r --force myminio/loki;
       /usr/bin/mc mb myminio/loki;
       /usr/bin/mc policy set public myminio/loki;

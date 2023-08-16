@@ -53,7 +53,7 @@ storage_config:
    shared_store: s3
 
  aws:
-   s3: s3://adminadmin:adminadmin@minio.:9000/loki
+   s3: s3://adminadmin:$MINIO_PRIVATE_KEY@minio.:9000/loki
    s3forcepathstyle: true
 
 limits_config:

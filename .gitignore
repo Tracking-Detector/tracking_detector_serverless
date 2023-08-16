@@ -5,3 +5,4 @@ __pycache__
 certbot
 .env
 nginx.conf
+loki.yaml
