@@ -1,6 +1,6 @@
 version: '3.7'
 
-name: tracking-detector-local
+name: tracking-detector
 
 services:
   # Infra
@@ -142,6 +142,8 @@ services:
     depends_on:
       - minio
       - db
+    labels:
+      - microservice=requests
     networks:
       - app-network
   export:
@@ -163,6 +165,8 @@ services:
     depends_on:
       - minio
       - db
+    labels:
+      - microservice=export
     networks:
       - app-network
   download:
@@ -181,6 +185,8 @@ services:
       - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
       - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
       - ADMIN_API_KEY=${ADMIN_API_KEY}
+    labels:
+      - microservice=download
     depends_on:
       - minio
       - db
@@ -205,6 +211,8 @@ services:
     depends_on:
       - minio
       - db
+    labels:
+      - microservice=auth
     networks:
       - app-network
   users:
@@ -226,6 +234,8 @@ services:
     depends_on:
       - minio
       - db
+    labels:
+      - microservice=users
     networks:
       - app-network
   training:
@@ -247,6 +257,8 @@ services:
     depends_on:
       - minio
       - db
+    labels:
+      - microservice=training
     networks:
       - app-network
   training-runs:
@@ -268,6 +280,8 @@ services:
     depends_on:
       - minio
       - db
+    labels:
+      - microservice=training-runs
     networks:
       - app-network
   front-end:
@@ -284,6 +298,8 @@ services:
       - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
       - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
       - NUXT_PUBLIC_API_BASE=${ADMIN_API_KEY}
+    labels:
+      - microservice=front-end
     networks:
       - app-network
 
