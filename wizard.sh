@@ -68,6 +68,7 @@ EOL
       sed "s/\$DOMAIN/$domain/g" ./infra/api-gateway/nginx.conf.template > ./infra/api-gateway/nginx.conf
       sed "s/\$MINIO_PRIVATE_KEY/$minio_private_key/g" ./infra/loki/loki.yaml.template > ./infra/loki/loki.yaml
       docker compose -f docker-compose.certbot.yml up
+      sleep 10
       docker compose -f docker-compose.certbot.yml stop
       docker compose build
       docker compose up -d
