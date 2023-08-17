@@ -6,3 +6,4 @@ certbot
 .env
 nginx.conf
 loki.yaml
+.DS_STORE
