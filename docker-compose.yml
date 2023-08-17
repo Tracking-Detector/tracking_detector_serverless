@@ -31,19 +31,8 @@ services:
       - minio
       - requests
       - htpasswd-generator
-      - certbot
     networks:
       - app-network
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes: 
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    environment:
-      - DOMAIN=${DOMAIN}
-      - EMAIL=${EMAIL}
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${EMAIL} -d ${DOMAIN} --agree-tos --no-eff-email
   loki:
     restart: unless-stopped
     image: grafana/loki:2.1.0
@@ -97,13 +86,7 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_PRIVATE_KEY};
-      /usr/bin/mc rm -r --force myminio/loki;
-      /usr/bin/mc mb myminio/loki;
-      /usr/bin/mc policy set public myminio/loki;
-      exit 0;
-      "
+      /bin/sh -c " /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_PRIVATE_KEY}; /usr/bin/mc rm -r --force myminio/loki; /usr/bin/mc mb myminio/loki; /usr/bin/mc policy set public myminio/loki; exit 0; "
   mongo-express:
     restart: unless-stopped
     image: mongo-express:latest

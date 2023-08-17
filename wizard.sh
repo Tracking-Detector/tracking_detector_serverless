@@ -67,6 +67,8 @@ EOL
       echo -e "${GREEN}Starting Docker Compose...${NC}"
       sed "s/\$DOMAIN/$domain/g" ./infra/api-gateway/nginx.conf.template > ./infra/api-gateway/nginx.conf
       sed "s/\$MINIO_PRIVATE_KEY/$minio_private_key/g" ./infra/loki/loki.yaml.template > ./infra/loki/loki.yaml
+      sudo docker compose -f docker-compose.certbot.yml up
+      sudo docker-compose -f docker-compose.certbot.yml down
       sudo docker compose build
       sudo docker compose up -d
       echo -e "${GREEN}Docker Compose has been started in daemon mode.${NC}"
