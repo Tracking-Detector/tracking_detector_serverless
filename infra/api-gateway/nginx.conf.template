@@ -17,14 +17,13 @@ http {
     proxy_request_buffering off;
 
     server {
-        listen [::]:80;
-        server_name $DOMAIN www.$DOMAIN;
+        listen 80;
+        server_name $DOMAIN www.$DOMAIN; 
 
-        location ~ /.well-known/acme-challenge {
-            allow all;
-            root /var/www/html;
+        location / {
+            return 301 https://$host$request_uri;
         }
-   }
+    }
 
     server {
         listen 443 ssl;
