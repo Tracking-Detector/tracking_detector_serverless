@@ -39,7 +39,7 @@ services:
     command: /bin/sh -c "mkdir -p /etc/letsencrypt/live/${DOMAIN} && apk add openssl && openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/letsencrypt/live/${DOMAIN}/privkey.pem -out /etc/letsencrypt/live/${DOMAIN}/fullchain.pem -subj '/CN=${DOMAIN}'"
     environment:
       - DOMAIN=${DOMAIN}
-    volumes: 
+    volumes:
       - ./certbot/conf:/etc/letsencrypt
   loki:
     restart: unless-stopped
@@ -94,13 +94,7 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_PRIVATE_KEY};
-      /usr/bin/mc rm -r --force myminio/loki;
-      /usr/bin/mc mb myminio/loki;
-      /usr/bin/mc policy set public myminio/loki;
-      exit 0;
-      "
+      /bin/sh -c " /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_PRIVATE_KEY}; /usr/bin/mc rm -r --force myminio/loki; /usr/bin/mc mb myminio/loki; /usr/bin/mc policy set public myminio/loki; exit 0; "
   mongo-express:
     restart: unless-stopped
     image: mongo-express:latest
@@ -113,7 +107,7 @@ services:
     networks:
       - app-network
   db:
-    image: mongo:latest
+    image: mongo:4.4.18
     restart: unless-stopped
     container_name: db
     environment:
