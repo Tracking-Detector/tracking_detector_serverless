@@ -45,5 +45,5 @@ async def train_model(request: Request, model_name: str, data_name: str, backgro
 
 if __name__ == "__main__":
     import uvicorn
-
+    print("Service About to Start.")
     uvicorn.run(app, host="0.0.0.0", port=8081)
