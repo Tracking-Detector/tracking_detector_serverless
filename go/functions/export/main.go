@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"time"
 
 	"strings"
 	"tds/shared/configs"
@@ -157,6 +158,7 @@ func RunDataExport(fe extractor.Extractor) {
 }
 
 func main() {
+	time.Sleep(30 * time.Second)
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
 	go startExportConsumer()
 	select {}

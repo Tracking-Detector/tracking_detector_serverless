@@ -168,6 +168,7 @@ services:
       - minio
       - db
       - promtail
+      - rabbitmq
     labels:
       - microservice=disptach
     networks:
@@ -192,6 +193,7 @@ services:
       - minio
       - dispatch
       - db
+      - rabbitmq
     labels:
       - microservice=export
     networks:
@@ -286,6 +288,7 @@ services:
       - minio
       - db
       - dispatch
+      - rabbitmq
     labels:
       - microservice=training
     networks:

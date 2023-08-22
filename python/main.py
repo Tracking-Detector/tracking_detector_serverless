@@ -1,6 +1,7 @@
 import json
 import os
 import pika
+import time
 from pymongo import MongoClient
 from lib.model import get_all_available_models
 from lib.train import train_model
@@ -39,6 +40,7 @@ def callback(ch, method, properties, body):
 
 def main():
     seed_models_in_db()
+    time.sleep(30)
 
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(

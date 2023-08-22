@@ -170,6 +170,7 @@ func GetAllPossibleModels(c *fiber.Ctx) error {
 }
 
 func main() {
+	time.Sleep(30 * time.Second)
 	SetupAMQP()
 	app := fiber.New()
 	app.Use(cors.New())
