@@ -114,7 +114,7 @@ services:
       RABBITMQ_DEFAULT_USER: "guest"
       RABBITMQ_DEFAULT_PASS: "guest"
     networks:
-      - app-network 
+      - app-network
   # Serverless Functions
   requests:
     restart: unless-stopped
@@ -140,7 +140,7 @@ services:
       - microservice=requests
     networks:
       - app-network
-  
+
   dispatch:
     restart: unless-stopped
     build:
@@ -162,6 +162,7 @@ services:
       - minio
       - db
       - promtail
+      - rabbitmq
     labels:
       - microservice=dispatch
     networks:
@@ -186,6 +187,7 @@ services:
       - minio
       - db
       - promtail
+      - rabbitmq
     labels:
       - microservice=export
     networks:
@@ -283,6 +285,7 @@ services:
       - minio
       - db
       - promtail
+      - rabbitmq
     labels:
       - microservice=training
     networks:
