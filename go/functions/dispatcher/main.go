@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"tds/shared/configs"
@@ -17,7 +16,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	workers "github.com/jrallison/go-workers"
-	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -125,16 +123,16 @@ func GetAllPossibleModels(c *fiber.Ctx) error {
 }
 
 func StartCronJobs() {
-	c := cron.New(cron.WithSeconds())
-	_, err := c.AddFunc("0 0 1,15 * *", func() {
-		for _, export := range extractor.EXTRACTORS {
-			EnqueueExportJob(export.GetName())
-		}
-	})
-	if err != nil {
-		log.Fatalf("Could not schedule training job: %v", err)
-	}
-	c.Start()
+	// c := cron.New(cron.WithSeconds())
+	// _, err := c.AddFunc("0 0 1,15 * *", func() {
+	// 	for _, export := range extractor.EXTRACTORS {
+	// 		EnqueueExportJob(export.GetName())
+	// 	}
+	// })
+	// if err != nil {
+	// 	log.Fatalf("Could not schedule training job: %v", err)
+	// }
+	// c.Start()
 }
 
 func main() {
