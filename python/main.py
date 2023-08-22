@@ -1,18 +1,13 @@
+import json
 import os
-import redis
-from rq import Worker, Queue, Connection
+import pika
 from pymongo import MongoClient
 from lib.model import get_all_available_models
+from lib.train import train_model
 import logging
 
-logger = logging.getLogger("Model")
+logger = logging.getLogger("Consumer")
 logging.basicConfig(level=logging.INFO)
-
-def train_model(model_name: str, data_name: str, batch_size: int = 512, epochs: int = 10):
-    print(f"Training model: {model_name} with data: {data_name}")
-    for model in get_all_available_models():
-        if model.model_name == model_name:
-            model.train(data_name, batch_size, epochs)
 
 
 def seed_models_in_db():
@@ -23,13 +18,40 @@ def seed_models_in_db():
     for model in get_all_available_models():
         collection.update_one(
             {"name": model.model_name},
-            {"$set": {"name": model.model_name, "description": model.model_desc, "dims": model.input_dims}},
+            {"$set": {"name": model.model_name,
+                      "description": model.model_desc, "dims": model.input_dims}},
             upsert=True
         )
     logger.info("Finished seeding mongodb.")
 
-if __name__ == "__main__":
+
+def callback(ch, method, properties, body):
+    # Deserialize the body of the message
+    job_data = json.loads(body.decode('utf-8'))
+    function_name = job_data['functionName']
+    args = job_data['args']
+
+    if function_name == 'train_model':
+        train_model(*args)
+
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+
+
+def main():
     seed_models_in_db()
-    with Connection(redis.StrictRedis(host='redis', port=6379, db=0)):
-        worker = Worker(map(Queue, ['training']))
-        worker.work()
+
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host='rabbitmq', port=5672, credentials=pika.PlainCredentials('guest', 'guest'))
+    )
+    channel = connection.channel()
+
+    channel.queue_declare(queue='training', durable=True)
+
+    channel.basic_consume(queue='training', on_message_callback=callback)
+
+    channel.start_consuming()
+
+
+if __name__ == "__main__":
+    main()

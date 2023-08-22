@@ -3,7 +3,7 @@ version: '3.7'
 services:
   certbot:
     image: certbot/certbot
-    command: certonly --standalone --preferred-challenges http --agree-tos --email ${EMAIL} -d ${DOMAIN}
+    command: certonly --standalone --preferred-challenges http --agree-tos --email ${EMAIL} -d ${DOMAIN} -d www.${DOMAIN}
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot

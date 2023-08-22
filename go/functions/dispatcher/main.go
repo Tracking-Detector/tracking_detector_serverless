@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"os"
 	"tds/shared/configs"
 	"tds/shared/extractor"
 	"tds/shared/models"
@@ -15,28 +13,77 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	workers "github.com/jrallison/go-workers"
+	log "github.com/sirupsen/logrus"
+	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var modelCollection *mongo.Collection = configs.GetCollection(configs.DB, configs.EnvModelCollection())
+var rabbitConn *amqp.Connection
+var rabbitCh *amqp.Channel
 
-func SetupWorkers() {
-	workers.Configure(map[string]string{
-		"server":   "redis:6379",
-		"database": "0",
-		"pool":     "30",
-		"process":  fmt.Sprintf("worker-%d", os.Getpid()),
-	})
+func SetupAMQP() {
+	var err error
+	rabbitConn, err = amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
+	if err != nil {
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
+
+	rabbitCh, err = rabbitConn.Channel()
+	if err != nil {
+		log.Fatalf("Failed to open a channel: %v", err)
+	}
+
+	// Declare the queues at startup
+	_, err = rabbitCh.QueueDeclare("exports", true, false, false, false, nil)
+	if err != nil {
+		log.Fatalf("Failed to declare an exports queue: %v", err)
+	}
+
+	_, err = rabbitCh.QueueDeclare("training", true, false, false, false, nil)
+	if err != nil {
+		log.Fatalf("Failed to declare a training queue: %v", err)
+	}
 }
 
 func EnqueueExportJob(exportName string) {
-	workers.Enqueue("exports", "Export", []string{exportName})
+	job := models.NewJob("export", []string{exportName})
+	message, err := job.Serialize()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"service": "dispatch",
+			"error":   err.Error(),
+		}).Error("Error serializing job.")
+		return
+	}
+	err = rabbitCh.Publish("", "exports", false, false, amqp.Publishing{
+		ContentType: "text/plain",
+		Body:        []byte(message),
+	})
+	if err != nil {
+		log.Printf("Failed to publish a message to exports queue: %v", err)
+	}
 }
 
 func EnqueueTrainingJob(modelName string, dataSetName string) {
-	workers.Enqueue("training", "train_model", []string{modelName, dataSetName})
+	job := models.NewJob("train_model", []string{modelName, dataSetName})
+	message, err := job.Serialize()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"service": "dispatch",
+			"error":   err.Error(),
+		}).Error("Error serializing job.")
+		return
+	}
+	err = rabbitCh.Publish("", "training", false, false, amqp.Publishing{
+		ContentType:  "text/plain",
+		Body:         []byte(message),
+		DeliveryMode: amqp.Persistent,
+	})
+	if err != nil {
+		log.Printf("Failed to publish a message to training queue: %v", err)
+	}
 }
 
 func RegisterExportJob(c *fiber.Ctx) error {
@@ -69,11 +116,11 @@ func RegisterTrainingJob(c *fiber.Ctx) error {
 	dataSetName := c.Params("dataSetName")
 	var ext extractor.Extractor
 	for _, ex := range extractor.EXTRACTORS {
-		if ex.GetFileName() == dataSetName {
+		if ex.GetName() == dataSetName {
 			ext = ex
 		}
 	}
-	if ext.GetFileName() == "" {
+	if ext.GetName() == "" {
 		return c.Status(http.StatusNotFound).JSON(responses.ExportJobStartResponse{
 			Status:  http.StatusNotFound,
 			Message: "Could not find the extractor you want to trigger.",
@@ -122,22 +169,8 @@ func GetAllPossibleModels(c *fiber.Ctx) error {
 	})
 }
 
-func StartCronJobs() {
-	// c := cron.New(cron.WithSeconds())
-	// _, err := c.AddFunc("0 0 1,15 * *", func() {
-	// 	for _, export := range extractor.EXTRACTORS {
-	// 		EnqueueExportJob(export.GetName())
-	// 	}
-	// })
-	// if err != nil {
-	// 	log.Fatalf("Could not schedule training job: %v", err)
-	// }
-	// c.Start()
-}
-
 func main() {
-	SetupWorkers()
-	StartCronJobs()
+	SetupAMQP()
 	app := fiber.New()
 	app.Use(cors.New())
 	app.Use(logger.New())

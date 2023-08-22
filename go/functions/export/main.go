@@ -4,51 +4,84 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
-	"os"
 
 	"strings"
 	"tds/shared/configs"
 	"tds/shared/extractor"
 	"tds/shared/models"
 
-	workers "github.com/jrallison/go-workers"
 	"github.com/minio/minio-go/v7"
 	log "github.com/sirupsen/logrus"
+	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, configs.EnvRequestCollection())
 
-func SetupWorkers() {
-	workers.Configure(map[string]string{
-		"server":   "redis:6379",
-		"database": "0",
-		"pool":     "30",
-		"process":  fmt.Sprintf("worker-%d", os.Getpid()),
-	})
-}
+func startExportConsumer() {
+	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
+	if err != nil {
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
+	defer conn.Close()
 
-func Export(message *workers.Msg) {
-	exportName, _ := message.Args().Array()
-	log.WithFields(log.Fields{
-		"service": "export",
-	}).Info("Starting export with extractor: ", exportName[0])
-	var ext extractor.Extractor
-	for _, ex := range extractor.EXTRACTORS {
-		if ex.GetName() == exportName[0] {
-			ext = ex
+	ch, err := conn.Channel()
+	if err != nil {
+		log.Fatalf("Failed to open a channel: %v", err)
+	}
+	defer ch.Close()
+
+	// Declare the exports queue
+	_, err = ch.QueueDeclare(
+		"exports", // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+	if err != nil {
+		log.Fatalf("Failed to declare an exports queue: %v", err)
+	}
+
+	msgs, err := ch.Consume(
+		"exports", // queue name
+		"",
+		true,  // auto-ack
+		false, // exclusive
+		false, // no-local
+		false, // no-wait
+		nil,   // args
+	)
+	if err != nil {
+		log.Fatalf("Failed to register a consumer: %v", err)
+	}
+
+	for msg := range msgs {
+		job, err := models.DeserializeJob(string(msg.Body))
+		if err != nil {
+			log.Errorf("Failed to deserialize job: %v", err)
+			continue
 		}
+
+		exportName := job.Args[0]
+		var ext extractor.Extractor
+		for _, ex := range extractor.EXTRACTORS {
+			if ex.GetName() == exportName {
+				ext = ex
+			}
+		}
+		if ext.GetName() == "" {
+			log.WithFields(log.Fields{
+				"service": "export",
+			}).Error("Error identifing export job: ", exportName[0])
+			return
+		}
+		RunDataExport(ext)
+
 	}
-	if ext.GetName() == "" {
-		log.WithFields(log.Fields{
-			"service": "export",
-		}).Error("Error identifing export job: ", exportName[0])
-		return
-	}
-	RunDataExport(ext)
 }
 
 func RunDataExport(fe extractor.Extractor) {
@@ -125,7 +158,6 @@ func RunDataExport(fe extractor.Extractor) {
 
 func main() {
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
-	SetupWorkers()
-	workers.Process("exports", Export, 2)
-	workers.Run()
+	go startExportConsumer()
+	select {}
 }

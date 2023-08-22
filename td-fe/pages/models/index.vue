@@ -9,7 +9,7 @@
         <v-card>
             <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
            
-            <div class="pa-4">
+            <div v-if="models.length > 0" class="pa-4">
                 <v-select density="compact" style="width: 300px;" v-model="selectedModel" label="Select Model"
                     :items="models.map(x => x.name)"></v-select>
                 <div v-if="selectedModel != 'No model selected'">

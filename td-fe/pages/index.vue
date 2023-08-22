@@ -64,7 +64,7 @@
                     </tr>
                 </tbody>
             </v-table>
-            <v-card-title class="mt-3 mb-2">Export</v-card-title>
+            <v-card-title class="mt-3 mb-2">Dispatch</v-card-title>
             <v-table>
                 <thead>
                     <tr>
@@ -80,7 +80,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in exportEndpoint" :key="item.description">
+                    <tr v-for="item in dispatchEndpoint" :key="item.description">
                         <td><a :href="item.url">{{ item.url }}</a></td>
                         <td>{{ item.method }}</td>
                         <td>{{ item.description }}</td>
@@ -133,30 +133,6 @@
                     </tr>
                 </tbody>
             </v-table>
-            <v-card-title class="mt-3 mb-2">Training</v-card-title>
-            <v-table>
-
-                <thead>
-                    <tr>
-                        <th class="text-left">
-                            Endpoint
-                        </th>
-                        <th class="text-left">
-                            Method
-                        </th>
-                        <th class="text-left">
-                            Description
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="item in trainingEndpoint" :key="item.description">
-                        <td><a :href="item.url">{{ item.url }}</a></td>
-                        <td>{{ item.method }}</td>
-                        <td>{{ item.description }}</td>
-                    </tr>
-                </tbody>
-            </v-table>
         </v-card>
 
     </div>
@@ -173,8 +149,8 @@ const healthChecks = ref([
         endpoint: "/api/requests/health"
     },
     {
-        service: "Export",
-        endpoint: "/api/export/health"
+        service: "Dispatch",
+        endpoint: "/api/dispatch/health"
     },
     {
         service: "Download",
@@ -183,10 +159,6 @@ const healthChecks = ref([
     {
         service: "Training-Runs",
         endpoint: "/api/training-runs/health"
-    },
-    {
-        service: "Training",
-        endpoint: "/api/train/health"
     },
 ])
 
@@ -263,21 +235,31 @@ const requestsEndpoint = ref([
         description: 'Endpoint to search for request data inside the db.'
     },
 ])
-const exportEndpoint = ref([
+const dispatchEndpoint = ref([
     {
-        url: '/api/export/health',
+        url: '/api/dispatch/health',
         method: 'GET',
-        description: 'Endpoint to check the health of the export microservice.'
+        description: 'Endpoint to check the health of the dispatch microservice.'
     },
     {
-        url: '/api/export/:extractorName/run',
+        url: '/api/dispatch/export',
+        method: 'GET',
+        description: 'Returns the available exports.'
+    },
+    {
+        url: '/api/dispatch/model',
+        method: 'GET',
+        description: 'Returns the available models.'
+    },
+    {
+        url: '/api/dispatch/export/:extractorName',
         method: 'POST',
-        description: 'Starts an export which the export name provided in as a path param.'
+        description: 'Dispatches an export job to the redis queue.'
     },
     {
-        url: '/api/export',
-        method: 'GET',
-        description: 'Returns all the available data exports provided with description, name and target name.'
+        url: '/api/dispatch/train/:modelName/run/:dataSetName',
+        method: 'POST',
+        description: 'Dispatches a training job to the redis queue.'
     },
 ])
 const downloadEndpoint = ref([
@@ -330,22 +312,5 @@ const trainingRunsEndpoint = ref([
     },
 ])
 
-const trainingEndpoint = ref([
-    {
-        url: '/api/train/health',
-        method: 'GET',
-        description: 'Endpoint to check the health of the train microservice.'
-    },
-    {
-        url: '/api/train/models',
-        method: 'GET',
-        description: 'Returns a list of models that can be trained.'
-    },
-    {
-        url: '/train/models/:modelName/run/:exportName',
-        method: 'POST',
-        description: 'Starts the training of a model by a given dataset name.'
-    },
-])
 
 </script>

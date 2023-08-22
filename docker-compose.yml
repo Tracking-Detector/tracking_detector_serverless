@@ -108,10 +108,13 @@ services:
       - mongo_storage:/data/db
     networks:
       - app-network
-  redis:
-    image: redis
+  rabbitmq:
+    image: "rabbitmq:management"
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
     networks:
-      - app-network
+      - app-network 
   # Serverless Functions
   requests:
     restart: unless-stopped
