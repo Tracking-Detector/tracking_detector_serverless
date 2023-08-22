@@ -1,5 +1,4 @@
-FROM toddstavish/tensorflow.cpu
-RUN pip install tensorflowjs
+FROM tensorflow/tensorflow
 # Set the working directory in the container
 WORKDIR /app
 
@@ -12,4 +11,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # Set the command to run the FastAPI application using Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
+CMD [ "python", "worker.py" ]
