@@ -108,6 +108,10 @@ services:
       - mongo_storage:/data/db
     networks:
       - app-network
+  redis:
+    image: redis
+    networks:
+      - app-network
   # Serverless Functions
   requests:
     restart: unless-stopped
@@ -128,8 +132,35 @@ services:
     depends_on:
       - minio
       - db
+      - promtail
     labels:
       - microservice=requests
+    networks:
+      - app-network
+  
+  dispatch:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./go/functions/dispatcher/Dockerfile
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - MODELS_COLLECTION=${MODELS_COLLECTION}
+    depends_on:
+      - minio
+      - db
+      - promtail
+    labels:
+      - microservice=dispatch
     networks:
       - app-network
   export:
@@ -151,6 +182,7 @@ services:
     depends_on:
       - minio
       - db
+      - promtail
     labels:
       - microservice=export
     networks:
@@ -174,6 +206,7 @@ services:
     depends_on:
       - minio
       - db
+      - promtail
     labels:
       - microservice=download
     networks:
@@ -197,6 +230,7 @@ services:
     depends_on:
       - minio
       - db
+      - promtail
     labels:
       - microservice=auth
     networks:
@@ -220,6 +254,7 @@ services:
     depends_on:
       - minio
       - db
+      - promtail
     labels:
       - microservice=users
     networks:
@@ -234,6 +269,7 @@ services:
       - USER_COLLECTION=${USER_COLLECTION}
       - REQUEST_COLLECTION=${REQUEST_COLLECTION}
       - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MODELS_COLLECTION=${MODELS_COLLECTION}
       - MINIO_URI=${MINIO_URI}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
@@ -243,6 +279,7 @@ services:
     depends_on:
       - minio
       - db
+      - promtail
     labels:
       - microservice=training
     networks:
@@ -266,6 +303,7 @@ services:
     depends_on:
       - minio
       - db
+      - promtail
     labels:
       - microservice=training-runs
     networks:

@@ -1,6 +1,5 @@
-# Use the official Python base image
-FROM tensorflow/tensorflow
-
+FROM toddstavish/tensorflow.cpu
+RUN pip install tensorflowjs
 # Set the working directory in the container
 WORKDIR /app
 

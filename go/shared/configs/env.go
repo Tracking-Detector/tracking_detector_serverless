@@ -43,3 +43,7 @@ func EnvModelBucketName() string {
 func EnvAdminApiKey() string {
 	return os.Getenv("ADMIN_API_KEY")
 }
+
+func EnvModelCollection() string {
+	return os.Getenv("MODELS_COLLECTION")
+}

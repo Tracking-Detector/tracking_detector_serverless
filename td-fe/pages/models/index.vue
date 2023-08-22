@@ -43,7 +43,7 @@ const selectedModel = ref("No model selected")
 const selectedDataSet = ref("")
 
 const triggerTraining = () => {
-    fetch(`/api/train/models/${selectedModel.value}/run/${selectedDataSet.value}`, {
+    fetch(`/api/dispatch/train/${selectedModel.value}/run/${selectedDataSet.value}`, {
         headers: {
             "Content-Type": "application/json",
             "X-API-Key": 'Bearer ' + config.public.apiBase
@@ -78,7 +78,7 @@ const loadModelRuns = () => {
 }
 const loadAvailableDataSets = () => {
     isLoading.value = true
-    fetch("/api/export", {
+    fetch("/api/dispatch/export", {
         headers: {
             "X-API-Key": 'Bearer '+ config.public.apiBase
         }
@@ -92,7 +92,7 @@ const loadAvailableDataSets = () => {
 
 const loadAvailableModels = () => {
     isLoading.value = true
-    fetch("/api/train/models", {
+    fetch("/api/dispatch/model", {
         headers: {
             "X-API-Key": 'Bearer '+ config.public.apiBase
         }

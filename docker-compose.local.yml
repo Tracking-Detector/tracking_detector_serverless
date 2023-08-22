@@ -106,6 +106,10 @@ services:
       - db
     networks:
       - app-network
+  redis:
+    image: redis
+    networks:
+      - app-network
   db:
     image: mongo:4.4.18
     restart: unless-stopped
@@ -138,6 +142,31 @@ services:
       - db
     labels:
       - microservice=requests
+    networks:
+      - app-network
+  dispatch:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./go/functions/dispatcher/Dockerfile
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - USER_COLLECTION=${USER_COLLECTION}
+      - REQUEST_COLLECTION=${REQUEST_COLLECTION}
+      - TRAINING_RUNS_COLLECTION=${TRAINING_RUNS_COLLECTION}
+      - MODELS_COLLECTION=${MODELS_COLLECTION}
+      - MINIO_URI=${MINIO_URI}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_PRIVATE_KEY=${MINIO_PRIVATE_KEY}
+      - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
+      - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+    depends_on:
+      - minio
+      - db
+      - promtail
+    labels:
+      - microservice=disptach
     networks:
       - app-network
   export:
@@ -248,6 +277,7 @@ services:
       - EXPORT_BUCKET_NAME=${EXPORT_BUCKET_NAME}
       - MODEL_BUCKET_NAME=${MODEL_BUCKET_NAME}
       - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - MODELS_COLLECTION=${MODELS_COLLECTION}
     depends_on:
       - minio
       - db

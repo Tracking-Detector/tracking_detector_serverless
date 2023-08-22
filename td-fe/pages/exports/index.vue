@@ -47,7 +47,7 @@ const alert = ref({
 
 const loadAvailableExports = () => {
     isLoading.value = true
-    fetch("/api/export", {
+    fetch("/api/dispatch/export", {
         headers: {
             "X-API-Key": 'Bearer '+ config.public.apiBase
         }
@@ -61,7 +61,7 @@ const loadAvailableExports = () => {
 
 const startExport = (name) => {
     isLoading.value = true
-    fetch("/api/export/" + name + "/run", {
+    fetch("/api/dispatch/export/" + name, {
         method: "POST",
         headers: {
             "X-API-Key": 'Bearer '+ config.public.apiBase

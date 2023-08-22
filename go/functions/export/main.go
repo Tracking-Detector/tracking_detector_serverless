@@ -4,21 +4,17 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"os"
 
-	"net/http"
 	"strings"
 	"tds/shared/configs"
 	"tds/shared/extractor"
 	"tds/shared/models"
-	"tds/shared/responses"
-	"tds/shared/utils"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	workers "github.com/jrallison/go-workers"
 	"github.com/minio/minio-go/v7"
-	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,11 +22,39 @@ import (
 
 var requestDataCollection *mongo.Collection = configs.GetCollection(configs.DB, configs.EnvRequestCollection())
 
+func SetupWorkers() {
+	workers.Configure(map[string]string{
+		"server":   "redis:6379",
+		"database": "0",
+		"pool":     "30",
+		"process":  fmt.Sprintf("worker-%d", os.Getpid()),
+	})
+}
+
+func Export(message *workers.Msg) {
+	exportName, _ := message.Args().Array()
+	log.WithFields(log.Fields{
+		"service": "export",
+	}).Info("Starting export with extractor: ", exportName[0])
+	var ext extractor.Extractor
+	for _, ex := range extractor.EXTRACTORS {
+		if ex.GetName() == exportName[0] {
+			ext = ex
+		}
+	}
+	if ext.GetName() == "" {
+		log.WithFields(log.Fields{
+			"service": "export",
+		}).Error("Error identifing export job: ", exportName[0])
+		return
+	}
+	RunDataExport(ext)
+}
+
 func RunDataExport(fe extractor.Extractor) {
 	pr, pw := io.Pipe()
 
 	gzipWriter := gzip.NewWriter(pw)
-	// TODO write export data into mongo
 	go func() {
 		defer pw.Close()
 		defer gzipWriter.Close()
@@ -40,7 +64,8 @@ func RunDataExport(fe extractor.Extractor) {
 			log.WithFields(log.Fields{
 				"service": "export",
 				"error":   err.Error(),
-			}).Fatal("Failed to query MongoDB collection.")
+			}).Error("Failed to query MongoDB collection.")
+			return
 		}
 		defer cursor.Close(context.Background())
 
@@ -62,7 +87,7 @@ func RunDataExport(fe extractor.Extractor) {
 				log.WithFields(log.Fields{
 					"service": "export",
 					"error":   err.Error(),
-				}).Fatal("Could not convert int[] to string.")
+				}).Error("Could not convert int[] to string.")
 				continue
 			}
 			data := strings.Trim(string(arr), "[]") + "\n"
@@ -93,79 +118,14 @@ func RunDataExport(fe extractor.Extractor) {
 		log.WithFields(log.Fields{
 			"service": "export",
 			"error":   putErr.Error(),
-		}).Fatal("Failed to upload data to MinIO.")
+		}).Error("Failed to upload data to MinIO.")
 	}
 
-}
-
-func ExportData(c *fiber.Ctx) error {
-	_, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	extractorName := c.Params("extractorName")
-	var ext extractor.Extractor
-	for _, ex := range extractor.EXTRACTORS {
-		if ex.GetName() == extractorName {
-			ext = ex
-		}
-	}
-	if ext.GetName() == "" {
-		return c.Status(http.StatusNotFound).JSON(responses.ExportJobStartResponse{
-			Status:  http.StatusNotFound,
-			Message: "Could not find the extractor you want to trigger.",
-		})
-	}
-	go RunDataExport(ext)
-	return c.Status(http.StatusOK).JSON(responses.ExportJobStartResponse{
-		Status:  http.StatusOK,
-		Message: "The export has been started.",
-	})
-}
-
-func GetAllPossibleExports(c *fiber.Ctx) error {
-	_, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	possibleExports := make([]*fiber.Map, 0)
-	for _, ext := range extractor.EXTRACTORS {
-		possibleExports = append(possibleExports, &fiber.Map{
-			"name":        ext.GetName(),
-			"location":    ext.GetFileName(),
-			"description": ext.GetDescription(),
-		})
-	}
-	return c.Status(http.StatusOK).JSON(responses.ExportTypesResponse{
-		Status: http.StatusOK,
-		Data:   possibleExports,
-	})
-}
-
-func RunAllExtractors() {
-	for _, ex := range extractor.EXTRACTORS {
-		RunDataExport(ex)
-	}
-}
-
-func SetupCron() {
-	c := cron.New()
-	_, err := c.AddFunc("0 0 */14 * *", RunAllExtractors)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"service": "export",
-			"error":   err.Error(),
-		}).Fatal("Failed to add cron job.")
-	}
-	c.Start()
 }
 
 func main() {
-	SetupCron()
-	app := fiber.New()
-	app.Use(cors.New())
-	app.Use(logger.New())
 	configs.VerifyBucketExists(context.Background(), configs.MINIO, configs.EnvExportBucketName())
-	app.Get("/export/health", utils.GetHealth)
-	app.Post("/export/:extractorName/run", ExportData)
-	app.Get("/export", GetAllPossibleExports)
-
-	app.Listen(":8081")
+	SetupWorkers()
+	workers.Process("exports", Export, 2)
+	workers.Run()
 }

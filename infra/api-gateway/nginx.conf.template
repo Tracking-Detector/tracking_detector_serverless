@@ -59,18 +59,13 @@ http {
         location /api/training-runs {
             auth_request /auth;
             proxy_pass http://training-runs:8081/training-runs;
-
         }
-        location /api/export {
+        location /api/dispatch {
             auth_request /auth;
-            proxy_pass http://export:8081/export;
+            proxy_pass http://dispatch:8081/dispatch;
         }
         location /api/transfer {
             proxy_pass http://download:8081/transfer;
-        }
-        location /api/train {
-            auth_request /auth;
-            proxy_pass http://training:8081/train;
         }
         location /api/users {
             auth_request /auth;
