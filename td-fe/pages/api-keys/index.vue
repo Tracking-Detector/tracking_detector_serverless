@@ -9,7 +9,7 @@
       <v-card-title> Users </v-card-title>
       <v-divider></v-divider>
       <v-list class="mt-2">
-        <v-list-item v-for="user of userData">
+        <v-list-item v-for="user of userData" :key="user.email">
           <template v-slot:prepend>
             <v-avatar :color="user.role == 'admin' ? 'red' : 'green'">
               <v-icon color="white" v-if="user.role == 'admin'"

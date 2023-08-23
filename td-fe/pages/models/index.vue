@@ -35,13 +35,14 @@
               @click="triggerTraining()"
             ></v-btn>
           </div>
-
-          <training-data-view
-            v-if="runs != undefined && runs.length > 0"
-            v-for="dataset in getUniqueDataNames()"
-            :data="runs"
-            :dataSet="dataset"
-          ></training-data-view>
+          <div v-if="runs != undefined && runs.length > 0">
+            <training-data-view
+              v-for="dataset in getUniqueDataNames()"
+              :key="dataset"
+              :data="runs"
+              :dataSet="dataset"
+            ></training-data-view>
+          </div>
         </div>
       </div>
     </v-card>

@@ -12,7 +12,7 @@
       <v-row>
         <v-col cols="4" style="border-right: 1px solid lightgray">
           <v-list>
-            <div v-for="item in folderStructure">
+            <div v-for="item in folderStructure" :key="item.name">
               <v-list-group
                 v-if="item.children != undefined"
                 :value="item.name"
@@ -25,7 +25,7 @@
                     @click="changeDir(item)"
                   ></v-list-item>
                 </template>
-                <div v-for="subItem in item.children">
+                <div v-for="subItem in item.children" :key="subItem.name">
                   <v-list-group
                     v-if="subItem.children != undefined"
                     :value="subItem.name"
@@ -38,7 +38,10 @@
                         @click="changeDir(subItem)"
                       ></v-list-item>
                     </template>
-                    <div v-for="subSubItem in subItem.children">
+                    <div
+                      v-for="subSubItem in subItem.children"
+                      :key="subSubItem.name"
+                    >
                       <v-list-group
                         v-if="subSubItem.children != undefined"
                         :value="subSubItem.name"
@@ -53,6 +56,7 @@
                         </template>
                         <v-list-item
                           v-for="subSubSubItem in subSubItem.children"
+                          :key="subSubSubItem.name"
                           @click="changeDir(subSubSubItem)"
                         >
                           <template v-slot:prepend>
@@ -86,7 +90,7 @@
         </v-col>
         <v-col cols="8">
           <v-list>
-            <div v-for="entry in currentDir.children">
+            <div v-for="entry in currentDir.children" :key="entry.name">
               <v-list-item
                 v-if="entry.children != undefined"
                 @click="changeDir(entry)"

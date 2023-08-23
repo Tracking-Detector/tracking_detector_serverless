@@ -22,7 +22,7 @@
       <v-divider></v-divider>
       <v-list class="mt-2">
         <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
-        <div v-for="avex in exports">
+        <div v-for="avex in exports" :key="avex.name">
           <v-list-item>
             <template v-slot:prepend>
               <v-icon>mdi-export</v-icon>
