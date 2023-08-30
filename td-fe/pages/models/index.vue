@@ -49,7 +49,7 @@
   </div>
 </template>
 <script setup>
-useMeta({
+useHead({
   title: "Tracking Detector - Models",
 });
 

@@ -44,7 +44,7 @@
   </div>
 </template>
 <script setup>
-useMeta({
+useHead({
   title: "Tracking Detector - Exports",
 });
 const exports = ref([]);

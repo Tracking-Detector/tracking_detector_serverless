@@ -120,7 +120,7 @@
   </div>
 </template>
 <script setup>
-useMeta({
+useHead({
   title: "Tracking Detector",
 });
 const config = useRuntimeConfig();

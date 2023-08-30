@@ -53,7 +53,7 @@
   </div>
 </template>
 <script setup>
-useMeta({
+useHead({
   title: "Tracking Detector - Users",
 });
 const userData = ref([]);

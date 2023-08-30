@@ -123,7 +123,7 @@
   </div>
 </template>
 <script setup>
-useMeta({
+useHead({
   title: "Tracking Detector - Downloads",
 });
 const downloadableData = ref({});
